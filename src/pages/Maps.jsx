@@ -45,6 +45,8 @@ const MarkerManager = ({ onAddMarker, places }) => {
   const markerRef = useRef(null);
   const navigate = useNavigate();
 
+  // Di dalam component MarkerManager, ubah handler click event map:
+
   useMapEvents({
     click(e) {
       if (!isPopupOpen) {
@@ -59,6 +61,12 @@ const MarkerManager = ({ onAddMarker, places }) => {
         });
         setIsPopupOpen(true);
         setSelectedPlace(null);
+        
+        // Tambahkan kode untuk zoom dan centering pada lokasi yang diklik
+        map.flyTo(e.latlng, 16, { 
+          animate: true,
+          duration: 0.5 
+        });
       }
     }
   });
@@ -80,9 +88,16 @@ const MarkerManager = ({ onAddMarker, places }) => {
 
   const handleMarkerClick = (e, place) => {
     e.originalEvent.stopPropagation();
-    const pixelPosition = map.latLngToContainerPoint(L.latLng(place.latitude, place.longitude));
+    const latlng = L.latLng(place.latitude, place.longitude);
+    
+    map.flyTo(latlng, 16, { 
+      animate: true,
+      duration: 0.5 
+    });
+  
+    const pixelPosition = map.latLngToContainerPoint(latlng);
     setPopupPosition({
-      latlng: L.latLng(place.latitude, place.longitude),
+      latlng: latlng,
       pixel: {
         x: pixelPosition.x,
         y: pixelPosition.y
@@ -133,6 +148,15 @@ const MarkerManager = ({ onAddMarker, places }) => {
         <span className="text-sm ml-2 text-gray-700 font-medium">{rating}</span>
       </div>
     );
+  };
+
+  // Get image URL directly from the image property (no need for image_url)
+  const getImageUrl = (place) => {
+    if (place.images && place.images.length > 0) {
+      // Use the direct Dropbox URL that's stored in the image field
+      return place.images[0].image;
+    }
+    return '/placeholder_img.png'; // Fallback image
   };
 
   return (
@@ -186,11 +210,11 @@ const MarkerManager = ({ onAddMarker, places }) => {
 
           {selectedPlace ? (
             <div>
-              {/* Place image */}
+              {/* Place image - Updated to use the direct image URL */}
               {selectedPlace.images && selectedPlace.images.length > 0 && (
                 <div className="w-full h-40 overflow-hidden">
                   <img 
-                    src={selectedPlace.images[0].image_url} 
+                    src={getImageUrl(selectedPlace)} 
                     alt={selectedPlace.name} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
