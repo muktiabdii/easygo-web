@@ -1,9 +1,10 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "../pages/Login";
+import Login from "../pages/LoginPage";
 import RegisterStepOne from "../pages/RegisterStepOne";
 import RegisterStepTwo from "../pages/RegisterStepTwo";
 import ForgotPassword from '../pages/ForgotPassword';
+import Dashboard from '../pages/Dashboard';
 
 export default function AppRouter() {
   return (
@@ -14,6 +15,7 @@ export default function AppRouter() {
         <Route path="/register-step-one" element={<RegisterStepOne />} />
         <Route path="/register-step-two" element={<RegisterStepTwo />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );
