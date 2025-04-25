@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { login } from '../services/authService';
 
-// useLogin.js
 export const useLogin = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -11,18 +10,24 @@ export const useLogin = () => {
       setError(null);
   
       try {
-        const data = await login(email, password); // Misal return { token: '...' }
+        const data = await login(email, password); 
         if (data.token) {
           localStorage.setItem('token', data.token);
-          return true; // ← Ini penting!
-        } else {
+          return true; 
+        } 
+        
+        else {
           setError('Login gagal: token tidak ditemukan');
           return false;
         }
-      } catch (err) {
+      } 
+      
+      catch (err) {
         setError(err.message || 'Terjadi kesalahan saat login');
         return false;
-      } finally {
+      } 
+      
+      finally {
         setLoading(false);
       }
     };
