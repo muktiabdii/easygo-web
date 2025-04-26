@@ -5,9 +5,9 @@ import RegisterStepOne from "../pages/RegisterStepOne";
 import RegisterStepTwo from "../pages/RegisterStepTwo";
 import ForgotPasswordStepOne from '../pages/ForgotPasswordStepOne'
 import ForgotPasswordStepTwo from '../pages/ForgotPasswordStepTwo'
+import ForgotPasswordStepThree from '../pages/ForgotPasswordStepThree';
 import Dashboard from '../pages/Dashboard'
 import ChatPage from '../pages/ChatPage'
-// import ForgotPassword from '../pages/ForgotPassword';
 import Maps from "../pages/Maps";
 import AddPlace from "../pages/AddPlace";
 
@@ -21,6 +21,7 @@ export default function AppRouter() {
         <Route path="/register-step-two" element={<RegisterStepTwo />} />
         <Route path="/forgot-password-step-one" element={<ForgotPasswordStepOne />} />
         <Route path="/forgot-password-step-two" element={<ForgotPasswordStepTwo />} />
+        <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/maps" element={<Maps />} />
