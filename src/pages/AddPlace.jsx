@@ -1,56 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-const FACILITIES = [
-  {
-    id: 1,
-    name: 'Jalur Kursi Roda',
-    iconSelected: "icons/jalurkursiroda-w.png",
-    iconUnselected: "icons/jalurkursiroda-b.png",
-  },
-  {
-    id: 2,
-    name: 'Pintu Otomatis',
-    iconSelected: "icons/pintuotomatis-w.png",
-    iconUnselected: "icons/pintuotomatis-b.png",
-  },
-  {
-    id: 3,
-    name: 'Parkir Disabilitas',
-    iconSelected: "icons/parkirdisabilitas-w.png",
-    iconUnselected: "icons/parkirdisabilitas-b.png",
-  },
-  {
-    id: 4,
-    name: 'Toilet Disabilitas',
-    iconSelected: "icons/toiletdisabilitas-w.png",
-    iconUnselected: "icons/toiletdisabilitas-b.png",
-  },
-  {
-    id: 5,
-    name: 'Lift Braille & Suara',
-    iconSelected: "icons/liftbraille-w.png",
-    iconUnselected: "icons/liftbraille-b.png",
-  },
-  {
-    id: 6,
-    name: 'Interpreter Isyarat',
-    iconSelected: "icons/interpreterisyarat-w.png",
-    iconUnselected: "icons/interpreterisyarat-b.png",
-  },
-  {
-    id: 7,
-    name: 'Menu Braille',
-    iconSelected: "icons/menubraille-w.png",
-    iconUnselected: "icons/menubraille-b.png",
-  },
-  {
-    id: 8,
-    name: 'Jalur Guiding Block',
-    iconSelected: "icons/jalurguildingblock-w.png",
-    iconUnselected: "icons/jalurguildingblock-b.png",
-  },
-];
+import Rating from '../components/Rating';
+import Facilities from '../components/Facilities';
+import Review from '../components/Review';
+import FACILITIES from '../constants/facilities';
 
 const AddPlace = () => {
   const location = useLocation();
@@ -129,7 +82,7 @@ const AddPlace = () => {
       const formDataObj = new FormData();
       formDataObj.append('name', formData.namaTempat);
       formDataObj.append('address', formData.detailAlamat);
-      formDataObj.append('description', formData.ulasan);
+      formDataObj.append('comment', formData.ulasan);
       formDataObj.append('latitude', position.lat);
       formDataObj.append('longitude', position.lng);
       formDataObj.append('rating', formData.rating);
@@ -148,6 +101,7 @@ const AddPlace = () => {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
           body: formDataObj,
         });
@@ -156,7 +110,7 @@ const AddPlace = () => {
         console.log('Response:', responseData);
   
         if (response.ok) {
-          navigate('/maps');
+          navigate('/dashboard');
         } else {
           console.error('Failed to save place:', responseData);
           alert('Failed to save place: ' + (responseData.message || 'Unknown error'));
@@ -172,12 +126,10 @@ const AddPlace = () => {
   
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Content */}
       <div className="container mx-auto max-w-lg px-4 py-6">
         <h1 className="text-2xl font-bold text-center mb-6">Masukkan Tempat</h1>
         
         <form onSubmit={handleSubmit}>
-          {/* Form fields */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <input
               type="text"
@@ -198,14 +150,13 @@ const AddPlace = () => {
             />
           </div>
 
-          {/* Photo upload */}
           <div className="mb-6">
             <button 
               type="button" 
               onClick={() => document.getElementById('fotoUpload').click()}
               className="bg-[#3C91E6] hover:bg-[#3c80e6] text-white rounded p-3 w-full flex justify-center items-center mb-2"
             >
-              <img src="icons/sampul.png" alt="Camera Icon" className="mr-5 w-5 h-5"></img> Tambah Foto Sampul
+              <img src="icons/sampul.png" alt="Camera Icon" className="mr-5 w-5 h-5 "></img> Tambah Foto Sampul
             </button>
             <input 
               type="file" 
@@ -215,7 +166,6 @@ const AddPlace = () => {
               accept="image/*"
             />
             
-            {/* Image preview */}
             {previewUrl && (
               <div className="relative mt-2 border rounded overflow-hidden">
                 <img 
@@ -237,75 +187,16 @@ const AddPlace = () => {
             )}
           </div>
 
-          {/* Rating */}
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-center mb-8">Berikan Rating Anda!</h2>
-            <div className="flex justify-center gap-10">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => handleRatingChange(star)}
-                  className="focus:outline-none mb-8 hover:cursor-pointer"
-                >
-                  <img
-                    src={star <= formData.rating ? "/icons/star-filled.png" : "/icons/star-unfilled.png"} 
-                    alt={star <= formData.rating ? "Filled Star" : "Unfilled Star"}
-                    className="w-12 h-12"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
+          <Rating rating={formData.rating} onRatingChange={handleRatingChange} />
 
-          {/* Accessibility Facilities*/}
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-center mb-8">Kelengkapan Fasilitas</h2>
-            <div className="flex flex-wrap justify-center gap-8">
-              {FACILITIES.map((facility) => (
-                <button
-                  key={facility.id}
-                  type="button"
-                  onClick={() => handleFacilityToggle(facility.id)}
-                  className={`px-5 py-2 hover:cursor-pointer rounded-full text-sm flex items-center ${
-                    formData.selectedFacilities.includes(facility.id) 
-                      ? 'bg-[#3C91E6] text-white font-medium' 
-                      : 'bg-[#EFF0F7] text-[#3C91E6] font-medium'
-                  }`}
-                >
-                  <img 
-                    src={formData.selectedFacilities.includes(facility.id) ? facility.iconSelected : facility.iconUnselected} 
-                    alt={facility.name} 
-                    className="mr-3 w-5 h-5"
-                  />
-                  {facility.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <Facilities 
+            facilities={FACILITIES} 
+            selectedFacilities={formData.selectedFacilities} 
+            onFacilityToggle={handleFacilityToggle} 
+          />
 
-          {/* Review */}
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-center mb-4 mt-8">Berikan Ulasan Anda!</h2>
-            <div className="relative">
-              <textarea
-                name="ulasan"
-                placeholder="Tuliskan Ulasan Anda di Sini..."
-                value={formData.ulasan}
-                onChange={handleInputChange}
-                className="border border-[#3C91E6] rounded p-3 w-full h-50 resize-none focus:outline-none focus:border-2"
-              ></textarea>
-              <button 
-                type="button" 
-                onClick={() => setFormData({...formData, ulasan: ''})}
-                className="absolute bottom-6 right-4 text-black hover:text-[#3C91E6] underline hover:cursor-pointer" 
-              >
-                Hapus
-              </button>
-            </div>
-          </div>
+          <Review review={formData.ulasan} onReviewChange={handleInputChange} />
 
-          {/* Submit button */}
           <button
             type="submit"
             disabled={isLoading}

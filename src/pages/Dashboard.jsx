@@ -1,16 +1,64 @@
-import React from 'react'
-import Navbar from '../components/Navbar'
+import React, { useState, useRef, useEffect } from 'react';
+import { MapContainer, TileLayer } from 'react-leaflet';
+import Navbar from '../components/Navbar';
+import MarkerManager from '../components/MarkerManager';
+import LocationMarker from '../components/LocationMarker';
+import FloatingActionButton from '../components/FloatingActionButton';
 
 const Dashboard = () => {
-  return (
-    <>
-      <Navbar />
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Selamat datang di Dashboard! KONZ!!</h1>
-        {/* Konten lainnya */}
-      </div>
-    </>
-  )
-}
+  const [places, setPlaces] = useState([]);
+  const mapRef = useRef(null);
 
-export default Dashboard
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/places');
+        if (response.ok) {
+          const fetchedPlaces = await response.json();
+          setPlaces(fetchedPlaces);
+        } else {
+          console.error('Failed to fetch places');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchPlaces();
+  }, []);
+
+  const handleLocateUser  = () => {
+    if (mapRef.current) {
+      mapRef.current.locate({ setView: true, maxZoom: 16, watch: true });
+    }
+  };
+
+  return (
+    <div className="w-full h-screen relative">
+      <Navbar onSearchChange={(e) => console.log(e.target.value)} />
+
+      <div className="w-full h-full">
+        <MapContainer
+          center={[-7.982298, 112.630783]}
+          zoom={12}
+          scrollWheelZoom={true}
+          className="w-full h-full"
+          zoomControl={false}
+          ref={mapRef}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <MarkerManager places={places} />
+          <LocationMarker />
+        </MapContainer>
+      </div>
+
+      <FloatingActionButton onLocateUser ={handleLocateUser} />
+    </div>
+  );
+};
+
+export default Dashboard;
