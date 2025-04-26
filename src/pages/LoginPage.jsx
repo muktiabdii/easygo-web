@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogin } from '../hooks/useLogin';
-import LoadingIndicator from '../components/LoadingIndicator'; // Import komponen LoadingIndicator
+import LoadingIndicator from '../components/LoadingIndicator';
+import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
-  const navigate = useNavigate();
+
+  // inisiasi data dari hook useLogin
   const { loginUser, loading, error } = useLogin();
   
+  // inisiasi state
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // fungsi untuk mengirim data login ke API
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await loginUser(email, password);
@@ -22,6 +27,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
       
+      {/* loading indikator */}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-50">
           <LoadingIndicator /> 
@@ -37,6 +43,7 @@ const LoginPage = () => {
           <h1 className="text-2xl font-bold mb-6">Masuk</h1>
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <input
+              required
               type="email"
               placeholder="Email"
               value={email}
@@ -44,6 +51,7 @@ const LoginPage = () => {
               className="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
+              required
               type="password"
               placeholder="Kata Sandi"
               value={password}
@@ -61,6 +69,9 @@ const LoginPage = () => {
               {loading ? 'Tunggu sebentar...' : 'Masuk'}
             </button>
           </form>
+          <p className="text-sm mt-4">
+            Belum punya akun? <Link to="/register-step-one" className="font-semibold hover:underline">Daftar sekarang!</Link>
+          </p>
           {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
         </div>
       </div>
