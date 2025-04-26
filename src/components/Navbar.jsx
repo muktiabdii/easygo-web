@@ -29,13 +29,13 @@ const Navbar = ({ onSearchChange }) => {
     <>
       {isFilterOpen && (
         <div
-          className="fixed inset-0 backdrop-blur-sm bg-white/5 z-40"
+          className="fixed inset-0 backdrop-blur-sm bg-white/5 z-[1001]"
           onClick={toggleFilter}
         />
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white z-50 shadow-lg transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
           isFilterOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -66,7 +66,7 @@ const Navbar = ({ onSearchChange }) => {
         </div>
       </div>
 
-      <nav className="bg-transparent p-4 flex items-center justify-between w-full">
+      <nav className="fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000]">
         <div className="flex items-center space-x-4">
           <button onClick={toggleFilter}>
             <img
