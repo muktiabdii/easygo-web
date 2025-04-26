@@ -1,12 +1,16 @@
-// src/pages/Dashboard.jsx
-import React from 'react';
+import React from 'react'
+import Navbar from '../components/Navbar'
 
 const Dashboard = () => {
   return (
-    <div className="h-screen flex items-center justify-center bg-green-100">
-      <h1 className="text-3xl font-bold text-green-800">Login Berhasil! Selamat datang di Dashboard 🎉</h1>
-    </div>
-  );
-};
+    <>
+      <Navbar />
+      <div className="p-6">
+        <h1 className="text-2xl font-bold">Selamat datang di Dashboard! KONZ!!</h1>
+        {/* Konten lainnya */}
+      </div>
+    </>
+  )
+}
 
-export default Dashboard;
+export default Dashboard

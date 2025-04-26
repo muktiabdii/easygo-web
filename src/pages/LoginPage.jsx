@@ -23,7 +23,6 @@ const LoginPage = () => {
       navigate('/dashboard');
     }
   };
-
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
       
