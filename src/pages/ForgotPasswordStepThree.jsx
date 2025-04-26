@@ -1,11 +1,14 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const ForgotPasswordStepThree = () => {
-    const handleSubmit = (e) => {
-      e.preventDefault()
-      // Tambahkan aksi kalau mau, misalnya redirect ke halaman login setelah reset
-      console.log('Password reset submitted')
-    }
+  const navigate = useNavigate()
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // Setelah submit, langsung arahkan ke halaman login
+    navigate('/login')
+  }
 
   return (
     <div
@@ -17,11 +20,6 @@ const ForgotPasswordStepThree = () => {
         <form className="flex flex-col items-center space-y-4 text-center" onSubmit={handleSubmit}>
           <h1 className="text-[40px] font-bold mb-2">Reset Password</h1>
             <input
-              type="email"
-              placeholder="Email"
-              className="w-full max-w-[400px] mt-4 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
               type="password"
               placeholder="Kata Sandi Baru"
               className="w-full max-w-[400px] mt-4 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -29,7 +27,7 @@ const ForgotPasswordStepThree = () => {
             <input
               type="password"
               placeholder="Ulangi Kata Sandi Baru"
-              className="w-full max-w-[400px] mt-4 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full max-w-[400px] mt-2 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <button
               type="submit"
