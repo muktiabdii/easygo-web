@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "../pages/Login";
+import Login from "../pages/LoginPage";
 import RegisterStepOne from "../pages/RegisterStepOne";
 import RegisterStepTwo from "../pages/RegisterStepTwo";
 import ForgotPasswordStepOne from '../pages/ForgotPasswordStepOne'
@@ -20,12 +20,13 @@ export default function AppRouter() {
         <Route path="/login" element={<Login />} />
         <Route path="/register-step-one" element={<RegisterStepOne />} />
         <Route path="/register-step-two" element={<RegisterStepTwo />} />
-        <Route path="/forgot-password" element={<ForgotPasswordStepOne />} />
+        <Route path="/forgot-password-step-one" element={<ForgotPasswordStepOne />} />
         <Route path="/forgot-password-step-two" element={<ForgotPasswordStepTwo />} />
         <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/maps" element={<Maps />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tambah-tempat" element={<AddPlace />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
