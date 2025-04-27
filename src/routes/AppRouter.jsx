@@ -8,7 +8,6 @@ import ForgotPasswordStepTwo from '../pages/ForgotPasswordStepTwo'
 import ForgotPasswordStepThree from '../pages/ForgotPasswordStepThree';
 import Dashboard from '../pages/Dashboard'
 import ChatPage from '../pages/ChatPage'
-import Maps from "../pages/Maps";
 import AddPlace from "../pages/AddPlace";
 import Profile from "../pages/Profile";
 
@@ -25,8 +24,6 @@ export default function AppRouter() {
         <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<ChatPage />} />
-        <Route path="/maps" element={<Maps />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tambah-tempat" element={<AddPlace />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
