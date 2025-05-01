@@ -10,6 +10,7 @@ import Dashboard from '../pages/Dashboard'
 import ChatPage from '../pages/ChatPage'
 import AddPlace from "../pages/AddPlace";
 import Profile from "../pages/Profile";
+import PlaceDetail from "../pages/PlaceDetail";
 
 export default function AppRouter() {
   return (
@@ -26,6 +27,7 @@ export default function AppRouter() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/tambah-tempat" element={<AddPlace />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/place-detail" element={<PlaceDetail />} />
       </Routes>
     </BrowserRouter>
   );
