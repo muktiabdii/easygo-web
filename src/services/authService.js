@@ -24,6 +24,24 @@ export const register = async (data) => {
   } 
   
   catch (error) {
-    throw error.response ? error.response.data : error.message; // Menangani error
+    throw error.response ? error.response.data : error.message; 
+  }
+};
+
+// fungsi untuk cek login
+export const checkLogin = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token tidak ditemukan');
+    }
+    const response = await axios.get('http://localhost:8000/api/auth/check-login', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };

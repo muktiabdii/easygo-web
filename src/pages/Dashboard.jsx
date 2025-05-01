@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import MarkerManager from '../components/MarkerManager';
 import LocationMarker from '../components/LocationMarker';
 import FloatingActionButton from '../components/FloatingActionButton';
+import { useNavigate } from 'react-router-dom'; 
 
 const Dashboard = () => {
   const [places, setPlaces] = useState([]);
@@ -11,8 +12,16 @@ const Dashboard = () => {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [activeFilters, setActiveFilters] = useState([]);
   const mapRef = useRef(null);
+  const navigate = useNavigate(); 
 
   useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     const fetchPlaces = async () => {
       try {
         const response = await fetch('http://127.0.0.1:8000/api/places');
@@ -28,9 +37,9 @@ const Dashboard = () => {
     };
 
     fetchPlaces();
-  }, []);
+  }, [navigate]); 
 
-  const handleLocateUser = () => {
+  const handleLocateUser  = () => {
     if (mapRef.current) {
       mapRef.current.locate({ setView: true, maxZoom: 16, watch: true });
     }
@@ -84,7 +93,7 @@ const Dashboard = () => {
         </MapContainer>
       </div>
 
-      <FloatingActionButton onLocateUser={handleLocateUser} />
+      <FloatingActionButton onLocateUser ={handleLocateUser } />
     </div>
   );
 };

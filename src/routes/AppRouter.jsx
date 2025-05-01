@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from '../components/ProtectedRoute';
 import Login from "../pages/LoginPage";
 import RegisterStepOne from "../pages/RegisterStepOne";
 import RegisterStepTwo from "../pages/RegisterStepTwo";
@@ -20,11 +21,26 @@ export default function AppRouter() {
         <Route path="/register-step-two" element={<RegisterStepTwo />} />
         <Route path="/forgot-password-step-one" element={<ForgotPasswordStepOne />} />
         <Route path="/forgot-password-step-two" element={<ForgotPasswordStepTwo />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tambah-tempat" element={<AddPlace />} />
-        <Route path="/place-detail" element={<PlaceDetail />} />
+        <Route path="/chat" element={
+          <ProtectedRoute>
+            <ChatPage />
+          </ProtectedRoute>
+          } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/tambah-tempat" element={
+          <ProtectedRoute>
+            <AddPlace />
+          </ProtectedRoute>
+        } />
+        <Route path="/place-detail" element={
+          <ProtectedRoute>
+            <PlaceDetail />
+          </ProtectedRoute>
+          } />
       </Routes>
     </BrowserRouter>
   );
