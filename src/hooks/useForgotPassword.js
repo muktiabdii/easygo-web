@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { forgotPassword, validateOTP, resetPassword } from '../services/authService';
 
 export const useForgotPassword = () => {
+  
+  // inisiasi navigasi
+  const navigate = useNavigate();
 
   // inisiasi state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   // Step 1: fungsi untuk mengirim email ke API
   const sendForgotPasswordEmail = async (email) => {
@@ -34,9 +36,13 @@ export const useForgotPassword = () => {
     try {
       await validateOTP(email, otp);
       navigate('/forgot-password-step-three');
-    } catch (err) {
+    } 
+    
+    catch (err) {
       setError(err.message || 'Kode OTP salah atau sudah expired');
-    } finally {
+    } 
+    
+    finally {
       setLoading(false);
     }
   };
@@ -48,9 +54,13 @@ export const useForgotPassword = () => {
     try {
       await resetPassword(email, otp, password, password_confirmation);
       navigate('/login');
-    } catch (err) {
+    } 
+    
+    catch (err) {
       setError(err.message || 'Gagal reset password');
-    } finally {
+    } 
+    
+    finally {
       setLoading(false);
     }
   };

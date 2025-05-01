@@ -36,10 +36,6 @@ const RegisterStepTwo = () => {
       password,
       password_confirmation
     });
-
-    if (success) {
-      navigate('/login');
-    }
   };
 
   return (

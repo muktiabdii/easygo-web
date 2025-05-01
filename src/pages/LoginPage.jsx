@@ -18,11 +18,8 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await loginUser(email, password);
-    
-    if (success) {
-      navigate('/dashboard');
-    }
   };
+  
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
       

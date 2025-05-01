@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForgotPassword } from '../hooks/useForgotPassword';
 import LoadingIndicator from '../components/LoadingIndicator';
 
@@ -9,7 +8,6 @@ const ForgotPasswordStepOne = () => {
   const { sendForgotPasswordEmail, loading, error } = useForgotPassword();
 
   // inisialisasi state
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
 
   // fungsi untuk mengirim data email ke API
@@ -17,10 +15,6 @@ const ForgotPasswordStepOne = () => {
     e.preventDefault();
     const success =  await sendForgotPasswordEmail(email);
     localStorage.setItem('email', email);
-
-    if (success) {
-      navigate('/forgot-password-step-two');
-    }
   };
 
   return (
@@ -48,9 +42,6 @@ const ForgotPasswordStepOne = () => {
               className="w-full max-w-[400px] mt-4 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             />
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
             <button
               type="submit"
               className="mt-2 w-full max-w-[400px] bg-blue-500 text-white py-2 rounded-full hover:bg-blue-600 transition"
@@ -66,6 +57,7 @@ const ForgotPasswordStepOne = () => {
               Masuk
             </a>
           </p>
+            {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
         </div>
       </div>
     </div>

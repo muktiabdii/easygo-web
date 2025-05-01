@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForgotPassword } from '../hooks/useForgotPassword';
 import LoadingIndicator from '../components/LoadingIndicator';
 
@@ -9,24 +8,21 @@ const ForgotPasswordStepThree = () => {
   const { resetNewPassword, loading, error } = useForgotPassword();
 
   // inisialisasi state
-  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [password_confirmation, set_password_confirmation] = useState('');
+  const [localError, setLocalError] = useState(null);
 
   // fungsi untuk mengirim data password baru ke API
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = localStorage.getItem('email');
     const otp = localStorage.getItem('otp');
+
     if (password !== password_confirmation) {
-      alert('Kata sandi tidak cocok!');
+      setLocalError('Password dan konfirmasi password tidak cocok');
       return;
     }
     const success = await resetNewPassword(email, otp, password, password_confirmation);
-
-    if (success) {
-      navigate('/login');
-    }
   };
 
   return (
@@ -67,6 +63,8 @@ const ForgotPasswordStepThree = () => {
               {loading ? 'Tunggu Sebentar...' : 'Ubah Kata Sandi'}
             </button>
           </form>
+          {localError && <p className="text-red-500 text-sm mt-4">{localError}</p>}
+          {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
 
           <p className="text-sm mt-4">
             Ingat kata sandi?{' '}

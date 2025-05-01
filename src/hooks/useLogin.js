@@ -1,7 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
 
 export const useLogin = () => {
+
+  // inisialisasi navigasi
+  const navigate = useNavigate();
 
   // inisiasi state
   const [loading, setLoading] = useState(false);
@@ -13,6 +17,8 @@ export const useLogin = () => {
     setError(null);
     try {
     const data = await login(email, password); 
+    navigate('/dashboard'); 
+
     if (data.token) {
       localStorage.setItem('token', data.token);
       return true; 
