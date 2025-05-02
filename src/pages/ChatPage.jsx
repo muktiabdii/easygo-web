@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Navbar from '../components/Navbar'
+import NavbarBack from '../components/NavbarBack'
 
 const users = [
   {
@@ -99,8 +99,8 @@ const ChatPage = () => {
 
   return (
     <>
-      <Navbar />
-      <div className="min-h-screen bg-[#F7F8FD] px-15 pt-20">
+      <NavbarBack title="Chat" />
+      <div className="max-h-screen bg-white px-15 pt-3">
         <div className="flex space-x-6">
           {/* Sidebar */}
           <div className="w-1/6 space-y-4">
@@ -108,7 +108,7 @@ const ChatPage = () => {
             <button
               onClick={() => setActiveTab('cari')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-l-lg w-full ${
-                activeTab === 'cari' ? 'bg-[#EFF0F7] text-[#3C91E6]' : 'bg-white text-black shadow'
+                activeTab === 'cari' ? 'bg-[#EFF0F7] text-[#3C91E6]' : 'bg-[#EFF0F7] text-black shadow'
               } ${activeTab === 'cari' ? 'rounded-r-none' : ''}`}
             >
               <img
@@ -123,7 +123,7 @@ const ChatPage = () => {
             <button
               onClick={() => setActiveTab('obrolan')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-l-lg w-full ${
-                activeTab === 'obrolan' ? 'bg-[#EFF0F7] text-[#3C91E6]' : 'bg-white text-black shadow'
+                activeTab === 'obrolan' ? 'bg-[#EFF0F7] text-[#3C91E6]' : 'bg-[#EFF0F7] text-black shadow'
               } ${activeTab === 'obrolan' ? 'rounded-r-none' : ''}`}
             >
               <img
