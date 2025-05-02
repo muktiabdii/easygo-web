@@ -25,14 +25,18 @@ const NavbarBack = ({ title = "Profile", showAvatar = true }) => {
 
         {/* Avatar */}
         {showAvatar && (
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            <img
-              src="icons/user.png"
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+  <div
+    className="w-10 h-10 rounded-full overflow-hidden hover:cursor-pointer"
+     // Navigasi ke halaman profile
+  >
+    <img
+      src="icons/user.png"
+      alt="Profile"
+      className="w-full h-full object-cover"
+    />
+  </div>
+)}
+
       </div>
     </div>
   );

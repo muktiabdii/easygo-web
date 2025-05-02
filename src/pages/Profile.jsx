@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Slider from "react-slick";
+import { useNavigate } from 'react-router-dom';
+import NavbarBack from "../components/NavbarBack";
 
 const Profile = () => {
+  const navigate = useNavigate();
   // Setting carousel
     const reviewSettings = {
         dots: true,
@@ -14,22 +17,12 @@ const Profile = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F6FA] p-8 relative">
-            {/* Header */}
-            <div className="flex items-center mb-8">
-                <Link to="/" className="mr-4">
-                    <button className="text-2xl">&#8592;</button> {/* Panah kiri */}
-                </Link>
-                <h1 className="text-3xl font-bold">Profile</h1>
-                <div className="ml-auto">
-                    <img
-                        src="/profile-picture.jpg"
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full object-cover"
-                    />
-                </div>
-            </div>
-
+      <div>
+        <NavbarBack title="Profile" showAvatar={false} />
+      
+        <div className="min-h-screen bg-[#F5F6FA] p-8 relative ">
+          
+        
             {/* Main Content */}
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Left Card */}
@@ -40,7 +33,7 @@ const Profile = () => {
                     {/* Foto Profil */}
                     <div className="flex justify-center mb-4">
                         <img
-                            src="/profile-picture.jpg"
+                            src="/users/profile-picture.jpg"
                             alt="Profile"
                             className="w-32 h-32 rounded-full object-cover border-4 border-white"
                         />
@@ -149,6 +142,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
