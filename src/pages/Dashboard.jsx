@@ -7,6 +7,9 @@ import FloatingActionButton from '../components/FloatingActionButton';
 
 const Dashboard = () => {
   const [places, setPlaces] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [activeFilters, setActiveFilters] = useState([]);
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -27,15 +30,35 @@ const Dashboard = () => {
     fetchPlaces();
   }, []);
 
-  const handleLocateUser  = () => {
+  const handleLocateUser = () => {
     if (mapRef.current) {
       mapRef.current.locate({ setView: true, maxZoom: 16, watch: true });
     }
   };
 
+  const handleSearchInput = (e) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value === '') {
+      setIsSearchActive(false); 
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    setIsSearchActive(true);
+  };
+
+  const handleFilterChange = (selectedFilters) => {
+    setActiveFilters(selectedFilters);
+  };
+
   return (
     <div className="w-full h-screen relative">
-      <Navbar onSearchChange={(e) => console.log(e.target.value)} />
+      <Navbar 
+        onSearchChange={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}
+        onFilterChange={handleFilterChange}
+        hideBackground={true}
+      />
 
       <div className="w-full h-full">
         <MapContainer
@@ -51,12 +74,17 @@ const Dashboard = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          <MarkerManager places={places} />
+          <MarkerManager 
+            places={places} 
+            searchQuery={searchQuery}
+            isSearchActive={isSearchActive}
+            activeFilters={activeFilters}
+          />
           <LocationMarker />
         </MapContainer>
       </div>
 
-      <FloatingActionButton onLocateUser ={handleLocateUser} />
+      <FloatingActionButton onLocateUser={handleLocateUser} />
     </div>
   );
 };
