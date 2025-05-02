@@ -104,22 +104,33 @@ const ChatPage = () => {
         <div className="flex space-x-6">
           {/* Sidebar */}
           <div className="w-1/6 space-y-4">
+            {/* Tombol Cari Orang */}
             <button
               onClick={() => setActiveTab('cari')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-l-lg w-full ${
                 activeTab === 'cari' ? 'bg-[#EFF0F7] text-[#3C91E6]' : 'bg-white text-black shadow'
               } ${activeTab === 'cari' ? 'rounded-r-none' : ''}`}
             >
-              <img src="/icons/search-user.png" alt="Cari" className="h-5 w-5" />
+              <img
+                src={`/icons/${activeTab === 'cari' ? 'cariorang-blue' : 'cariorang-black'}.png`}
+                alt="Cari"
+                className="h-5 w-5"
+              />
               <span className="font-medium">Cari Orang</span>
             </button>
+
+            {/* Tombol Semua Obrolan */}
             <button
               onClick={() => setActiveTab('obrolan')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-l-lg w-full ${
                 activeTab === 'obrolan' ? 'bg-[#EFF0F7] text-[#3C91E6]' : 'bg-white text-black shadow'
-              } ${activeTab === 'obrolan' ? 'rounded-r-none' : ''}`}              
+              } ${activeTab === 'obrolan' ? 'rounded-r-none' : ''}`}
             >
-              <img src="/icons/message.png" alt="Obrolan" className="h-5 w-5" />
+              <img
+                src={`/icons/${activeTab === 'obrolan' ? 'semuaobrolan-blue' : 'semuaobrolan-black'}.png`}
+                alt="Obrolan"
+                className="h-5 w-5"
+              />
               <span className="font-medium">Semua Obrolan</span>
             </button>
           </div>
