@@ -20,7 +20,7 @@ const reviews = [
   }
 ];
 
-const Profile = () => {
+const ProfileEdit = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -34,7 +34,7 @@ const Profile = () => {
 
   return (
     <div>
-      <NavbarBack title="Profile" showAvatar={false} />
+      <NavbarBack title="Edit Profile" showAvatar={false} />
 
       <div className="min-h-screen bg-[#F5F6FA] p-8 relative">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -89,7 +89,7 @@ const Profile = () => {
 
           {/* Right Form */}
           <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-8 shadow-md">
-            <h2 className="text-[32px] font-bold mb-6 border-b pb-2 border-blue-300">Profile</h2>
+            <h2 className="text-[32px] font-bold mb-6 border-b pb-2 border-blue-300">Edit Profile</h2>
             <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
               <div className="space-y-4">
                 <div>
@@ -110,11 +110,13 @@ const Profile = () => {
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Provinsi</label>
-                  <input
-                    type="text"
-                    value="Jawa Timur"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
+                  <select className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]">
+                    <option>Jawa Timur</option>
+                    <option>Jawa Tengah</option>
+                    <option>Jawa Barat</option>
+                    <option>DKI Jakarta</option>
+                    <option>Bali</option>
+                  </select>
                 </div>
               </div>
               <div className="space-y-4">
@@ -128,25 +130,32 @@ const Profile = () => {
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Negara</label>
-                  <input
-                    type="text"
-                    value="Indonesia"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
+                  <select className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]">
+                    <option>Indonesia</option>
+                    <option>Malaysia</option>
+                    <option>Singapura</option>
+                    <option>Thailand</option>
+                  </select>
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Kota/Kabupaten</label>
-                  <input
-                    type="text"
-                    value="Malang"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
+                  <select className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]">
+                    <option>Malang</option>
+                    <option>Surabaya</option>
+                    <option>Bandung</option>
+                    <option>Yogyakarta</option>
+                  </select>
                 </div>
               </div>
             </form>
-            <div className="flex justify-end mt-6">
-              <button className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-24">
-                Edit Profile
+
+            {/* Tombol Aksi */}
+            <div className="flex justify-end mt-6 gap-4">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-24">
+                Ganti Foto Profile
+              </button>
+              <button className="bg-[#019900] text-white px-6 py-2 rounded-md hover:bg-[#016300] transition mt-24">
+                Perbarui
               </button>
             </div>
           </div>
@@ -156,4 +165,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfileEdit;

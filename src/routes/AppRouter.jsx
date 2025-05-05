@@ -11,6 +11,7 @@ import ChatPage from '../pages/ChatPage'
 import AddPlace from "../pages/AddPlace";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
+import ProfileEdit from "../pages/ProfileEdit";
 
 export default function AppRouter() {
   return (
@@ -28,6 +29,7 @@ export default function AppRouter() {
         <Route path="/tambah-tempat" element={<AddPlace />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/place-detail" element={<PlaceDetail />} />
+        <Route path="/edit-profile" element={<ProfileEdit />} />
       </Routes>
     </BrowserRouter>
   );
