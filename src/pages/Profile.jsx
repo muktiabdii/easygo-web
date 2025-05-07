@@ -97,7 +97,7 @@ const Profile = () => {
                   <input
                     type="text"
                     value="Jastin White"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
                 <div className="mt-14">
@@ -105,7 +105,7 @@ const Profile = () => {
                   <input
                     type="text"
                     value="+62 812 345 6789"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
                 <div className="mt-14">
@@ -113,7 +113,7 @@ const Profile = () => {
                   <input
                     type="text"
                     value="Jawa Timur"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
               </div>
@@ -123,7 +123,7 @@ const Profile = () => {
                   <input
                     type="email"
                     value="jastinwhite99@email.com"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
                 <div className="mt-14">
@@ -131,7 +131,7 @@ const Profile = () => {
                   <input
                     type="text"
                     value="Indonesia"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
                 <div className="mt-14">
@@ -139,7 +139,7 @@ const Profile = () => {
                   <input
                     type="text"
                     value="Malang"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
               </div>

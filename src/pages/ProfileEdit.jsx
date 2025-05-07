@@ -23,6 +23,30 @@ const reviews = [
 const ProfileEdit = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [formData, setFormData] = useState({
+    username: "Jastin White",
+    email: "jastinwhite99@email.com",
+    phone: "+62 812 345 6789",
+    province: "Jawa Timur",
+    country: "Indonesia",
+    city: "Malang"
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleClear = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: ""
+    }));
+  };
+  
 
   const prevReview = () => {
     setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
@@ -94,57 +118,132 @@ const ProfileEdit = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-[18px] font-semibold">Nama Pengguna</label>
-                  <input
-                    type="text"
-                    value="Jastin White"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    {formData.username && (
+                      <button
+                        type="button"
+                        onClick={() => handleClear('username')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-600"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Nomor Telepon</label>
-                  <input
-                    type="text"
-                    value="+62 812 345 6789"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    {formData.phone && (
+                      <button
+                        type="button"
+                        onClick={() => handleClear('phone')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-600"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Provinsi</label>
-                  <select className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]">
-                    <option>Jawa Timur</option>
-                    <option>Jawa Tengah</option>
-                    <option>Jawa Barat</option>
-                    <option>DKI Jakarta</option>
-                    <option>Bali</option>
-                  </select>
+                  <div className="relative">
+                    <select 
+                      name="province"
+                      value={formData.province}
+                      onChange={handleChange}
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[18px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
+                    >
+                      <option>Jawa Timur</option>
+                      <option>Jawa Tengah</option>
+                      <option>Jawa Barat</option>
+                      <option>DKI Jakarta</option>
+                      <option>Bali</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="text-[18px] font-semibold">Alamat Email</label>
-                  <input
-                    type="email"
-                    value="jastinwhite99@email.com"
-                    className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    {formData.email && (
+                      <button
+                        type="button"
+                        onClick={() => handleClear('email')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-600"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Negara</label>
-                  <select className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]">
-                    <option>Indonesia</option>
-                    <option>Malaysia</option>
-                    <option>Singapura</option>
-                    <option>Thailand</option>
-                  </select>
+                  <div className="relative">
+                    <select 
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[18px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
+                    >
+                      <option>Indonesia</option>
+                      <option>Malaysia</option>
+                      <option>Singapura</option>
+                      <option>Thailand</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Kota/Kabupaten</label>
-                  <select className="w-full h-[50px] p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]">
-                    <option>Malang</option>
-                    <option>Surabaya</option>
-                    <option>Bandung</option>
-                    <option>Yogyakarta</option>
-                  </select>
+                  <div className="relative">
+                    <select 
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[18px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
+                    >
+                      <option>Malang</option>
+                      <option>Surabaya</option>
+                      <option>Bandung</option>
+                      <option>Yogyakarta</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>
