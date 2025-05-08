@@ -9,6 +9,7 @@ import ForgotPasswordStepThree from '../pages/ForgotPasswordStepThree';
 import Dashboard from '../pages/Dashboard'
 import ChatPage from '../pages/ChatPage'
 import AddPlace from "../pages/AddPlace";
+import AddReview from "../pages/AddReview";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
 import ProfileEdit from "../pages/ProfileEdit";
@@ -27,6 +28,7 @@ export default function AppRouter() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/tambah-tempat" element={<AddPlace />} />
+        <Route path="/tambah-review" element={<AddReview />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/place-detail" element={<PlaceDetail />} />
         <Route path="/edit-profile" element={<ProfileEdit />} />

@@ -14,7 +14,7 @@ const Review = ({ review, onReviewChange }) => {
         ></textarea>
         <button 
           type="button" 
-          onClick={() => onReviewChange({ target: { value: '' } })}
+          onClick={() => onReviewChange({ target: { name: 'ulasan', value: '' } })}
           className="absolute bottom-6 right-4 text-black hover:text-[#3C91E6] underline hover:cursor-pointer" 
         >
           Hapus
