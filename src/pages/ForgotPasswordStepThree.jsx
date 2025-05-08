@@ -40,7 +40,7 @@ const ForgotPasswordStepThree = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="w-full min-w-[540px] p-8 bg-[#EFF0F7] rounded-xl shadow-md text-center">
         <form className="flex flex-col items-center space-y-4 text-center" onSubmit={handleSubmit}>
-          <h1 className="text-[40px] font-bold mb-2">Reset Password</h1>
+          <h1 className="text-2xl font-bold mb-6">Reset Password</h1>
             <input
               type="password"
               placeholder="Kata Sandi Baru"

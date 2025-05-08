@@ -91,7 +91,7 @@ const ForgotPasswordStepTwo = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="w-full min-w-[540px] p-8 bg-[#EFF0F7] rounded-xl shadow-md text-center">
           <form className="flex flex-col items-center space-y-4 text-center" onSubmit={handleSubmit}>
-            <h1 className="text-[40px] font-bold mb-4">Masukkan Kode OTP</h1>
+            <h1 className="text-2xl font-bold mb-2">Masukkan Kode OTP</h1>
             <p className="max-w-[416px] mb-6 text-[16px]">Masukkan kode OTP yang telah anda terima</p>
 
             <div className="flex justify-center space-x-2">
