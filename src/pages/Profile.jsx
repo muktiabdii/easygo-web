@@ -42,6 +42,7 @@ const Profile = () => {
 
       <div className="min-h-screen bg-[#F5F6FA] p-8 relative">
         <div className="flex flex-col lg:flex-row gap-8">
+          
           {/* Left Card */}
           <div className="w-[460px] h-full bg-blue-500 rounded-2xl p-8 text-center text-white shadow-md flex flex-col">
             <h2 className="text-3xl font-bold mb-6">Profile Pengguna</h2>
@@ -67,7 +68,20 @@ const Profile = () => {
                 >
                   ‹
                 </button>
-                <ReviewCard {...reviews[currentIndex]} />
+                
+                <div className="relative w-[300px] h-[185px]">
+                  {reviews.map((review, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-opacity duration-500 ease-in-out
+                        ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                      `}
+                    >
+                      <ReviewCard {...review} />
+                    </div>
+                  ))}
+                </div>
+                
                 <button
                   onClick={nextReview}
                   className="text-white text-3xl hover:text-gray-300"

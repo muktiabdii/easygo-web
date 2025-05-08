@@ -57,6 +57,18 @@ const ProfileEdit = () => {
     }));
   };
   
+  const [dropdownStates, setDropdownStates] = useState({
+    province: false,
+    country: false,
+    city: false
+  });
+  
+  const toggleDropdown = (field) => {
+    setDropdownStates(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
 
   const prevReview = () => {
     setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
@@ -108,7 +120,20 @@ const ProfileEdit = () => {
                 >
                   ‹
                 </button>
-                <ReviewCard {...reviews[currentIndex]} />
+
+                <div className="relative w-[300px] h-[185px]">
+                  {reviews.map((review, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-opacity duration-500 ease-in-out
+                        ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                      `}
+                    >
+                      <ReviewCard {...review} />
+                    </div>
+                  ))}
+                </div>
+                
                 <button
                   onClick={nextReview}
                   className="text-white text-3xl hover:text-gray-300"
@@ -190,6 +215,8 @@ const ProfileEdit = () => {
                       name="province"
                       value={formData.province}
                       onChange={handleChange}
+                      onFocus={() => toggleDropdown('province')}
+                      onBlur={() => toggleDropdown('province')}
                       className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                     >
                       <option>Jawa Timur</option>
@@ -199,7 +226,14 @@ const ProfileEdit = () => {
                       <option>Bali</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                      <svg 
+                        className="w-5 h-5 text-blue-500 transition-transform duration-200" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                        style={{
+                          transform: dropdownStates.province ? 'rotate(-90deg)' : 'rotate(0deg)'
+                        }}
+                      >
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -237,6 +271,8 @@ const ProfileEdit = () => {
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
+                      onFocus={() => toggleDropdown('country')}
+                      onBlur={() => toggleDropdown('country')}
                       className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                     >
                       <option>Indonesia</option>
@@ -245,12 +281,20 @@ const ProfileEdit = () => {
                       <option>Thailand</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                      <svg 
+                        className="w-5 h-5 text-blue-500 transition-transform duration-200" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                        style={{
+                          transform: dropdownStates.country ? 'rotate(-90deg)' : 'rotate(0deg)'
+                        }}
+                      >
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
                 </div>
+
                 <div className="mt-14">
                   <label className="text-[18px] font-semibold">Kota/Kabupaten</label>
                   <div className="relative">
@@ -259,6 +303,8 @@ const ProfileEdit = () => {
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
+                      onFocus={() => toggleDropdown('city')}
+                      onBlur={() => toggleDropdown('city')}
                       className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                     >
                       <option>Malang</option>
@@ -267,7 +313,14 @@ const ProfileEdit = () => {
                       <option>Yogyakarta</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                      <svg 
+                        className="w-5 h-5 text-blue-500 transition-transform duration-200" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                        style={{
+                          transform: dropdownStates.city ? 'rotate(-90deg)' : 'rotate(0deg)'
+                        }}
+                      >
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </div>
