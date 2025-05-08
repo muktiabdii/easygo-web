@@ -33,11 +33,21 @@ const ProfileEdit = () => {
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value } = e.target; 
+
+    if (name === 'phone') {
+      // Hanya izinkan angka dan karakter '+'
+      const filteredValue = value.replace(/[^0-9+]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: filteredValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleClear = (field) => {
@@ -55,6 +65,17 @@ const ProfileEdit = () => {
   const nextReview = () => {
     setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
   };
+
+  const handleProfile = () => {
+  const isFormValid = Object.values(formData).every(field => field.trim() !== "");
+
+  if (!isFormValid) {
+    alert("Semua field harus diisi sebelum memperbarui profil.");
+    return; // menghentikan eksekusi jika ada field kosong
+  }
+
+  navigate('/profile'); // navigasi hanya jika semua field terisi
+};
 
   return (
     <div>
@@ -120,6 +141,7 @@ const ProfileEdit = () => {
                   <label className="text-[18px] font-semibold">Nama Pengguna</label>
                   <div className="relative">
                     <input
+                      required
                       type="text"
                       name="username"
                       value={formData.username}
@@ -141,11 +163,13 @@ const ProfileEdit = () => {
                   <label className="text-[18px] font-semibold">Nomor Telepon</label>
                   <div className="relative">
                     <input
-                      type="text"
+                      type="tel"  // Ubah type menjadi "tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
                       className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      pattern="[0-9+]*"  // Tambahkan pattern untuk validasi HTML
+                      inputMode="numeric"  // Untuk keyboard numerik pada perangkat mobile
                     />
                     {formData.phone && (
                       <button
@@ -162,10 +186,11 @@ const ProfileEdit = () => {
                   <label className="text-[18px] font-semibold">Provinsi</label>
                   <div className="relative">
                     <select 
+                      required
                       name="province"
                       value={formData.province}
                       onChange={handleChange}
-                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[18px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                     >
                       <option>Jawa Timur</option>
                       <option>Jawa Tengah</option>
@@ -186,6 +211,7 @@ const ProfileEdit = () => {
                   <label className="text-[18px] font-semibold">Alamat Email</label>
                   <div className="relative">
                     <input
+                      required
                       type="email"
                       name="email"
                       value={formData.email}
@@ -207,10 +233,11 @@ const ProfileEdit = () => {
                   <label className="text-[18px] font-semibold">Negara</label>
                   <div className="relative">
                     <select 
+                      required
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
-                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[18px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                     >
                       <option>Indonesia</option>
                       <option>Malaysia</option>
@@ -228,10 +255,11 @@ const ProfileEdit = () => {
                   <label className="text-[18px] font-semibold">Kota/Kabupaten</label>
                   <div className="relative">
                     <select 
+                      required
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
-                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[18px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
+                      className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                     >
                       <option>Malang</option>
                       <option>Surabaya</option>
@@ -250,10 +278,13 @@ const ProfileEdit = () => {
 
             {/* Tombol Aksi */}
             <div className="flex justify-end mt-6 gap-4">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-24">
+              <button 
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-24">
                 Ganti Foto Profile
               </button>
-              <button className="bg-[#019900] text-white px-6 py-2 rounded-md hover:bg-[#016300] transition mt-24">
+              <button 
+              onClick={handleProfile}
+              className="bg-[#019900] text-white px-6 py-2 rounded-md hover:bg-[#016300] transition mt-24">
                 Perbarui
               </button>
             </div>

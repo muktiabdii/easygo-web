@@ -32,6 +32,10 @@ const Profile = () => {
     setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
   };
 
+  const handleProfileEdit = () => {
+    navigate('/edit-profile'); // Ganti path sesuai dengan rute yang kamu definisikan
+  };
+
   return (
     <div>
       <NavbarBack title="Profile" showAvatar={false} />
@@ -98,6 +102,7 @@ const Profile = () => {
                     type="text"
                     value="Jastin White"
                     className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
                 <div className="mt-14">
@@ -106,6 +111,7 @@ const Profile = () => {
                     type="text"
                     value="+62 812 345 6789"
                     className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
                 <div className="mt-14">
@@ -114,6 +120,7 @@ const Profile = () => {
                     type="text"
                     value="Jawa Timur"
                     className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
               </div>
@@ -124,6 +131,7 @@ const Profile = () => {
                     type="email"
                     value="jastinwhite99@email.com"
                     className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
                 <div className="mt-14">
@@ -132,6 +140,7 @@ const Profile = () => {
                     type="text"
                     value="Indonesia"
                     className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
                 <div className="mt-14">
@@ -140,12 +149,16 @@ const Profile = () => {
                     type="text"
                     value="Malang"
                     className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
               </div>
             </form>
             <div className="flex justify-end mt-6">
-              <button className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-24">
+              <button
+                onClick={handleProfileEdit}
+                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-24"
+              >
                 Edit Profile
               </button>
             </div>
