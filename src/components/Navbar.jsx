@@ -71,7 +71,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
     <>
       {isFilterOpen && (
         <div
-          className="fixed inset-0 backdrop-blur-sm bg-white/5 z-[1001]"
+          className="fixed inset-0 backdrop-blur-xs bg-white/5 z-[1001]"
           onClick={toggleFilter}
         />
       )}
