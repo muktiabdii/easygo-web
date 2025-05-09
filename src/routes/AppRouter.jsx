@@ -36,8 +36,6 @@ export default function AppRouter() {
           <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/place-detail" element={<PlaceDetail />} />
-          <Route path="/tambah-review" element={<AddReview />} />
-          <Route path="/edit-profile" element={<ProfileEdit />} />
           <Route 
             path="/profile" 
             element={
@@ -63,10 +61,19 @@ export default function AppRouter() {
               </PrivateRoute>
             } 
           />
-          
-
-          
-          
+          <Route path="/tambah-review" element={
+            <PrivateRoute>
+              <AddReview />
+            </PrivateRoute>
+            
+            } />
+          <Route path="/edit-profile" element={
+            <PrivateRoute>
+                   <ProfileEdit />
+            </PrivateRoute>
+            }
+             />
+        
           {/* Fallback route */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
