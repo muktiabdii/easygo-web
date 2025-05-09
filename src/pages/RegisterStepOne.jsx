@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRegistration } from '../contexts/RegistrationContext';
 
 const RegisterStepOne = () => {
-
-  // inisiasi state
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-  const [country, setCountry] = useState('');
-  const [province, setProvince] = useState('');
-  const [city, setCity] = useState('');
+  const { registrationData, updateRegistrationData } = useRegistration();
+  
+  // Menggunakan state lokal yang diinisialisasi dari context
+  const [name, setName] = useState(registrationData.name || '');
+  const [number, setNumber] = useState(registrationData.number || '');
+  const [country, setCountry] = useState(registrationData.country || '');
+  const [province, setProvince] = useState(registrationData.province || '');
+  const [city, setCity] = useState(registrationData.city || '');
 
-  // menyimpan data ke localStorage dan navigasi ke langkah berikutnya
   const handleSubmit = (e) => {
     e.preventDefault();
-    localStorage.setItem('registerData', JSON.stringify({ name, number, country, province, city }));
+    
+    // Memperbarui data di context
+    updateRegistrationData({ name, number, country, province, city });
+    
+    // Navigasi ke langkah berikutnya
     navigate("/register-step-two");
   };
 

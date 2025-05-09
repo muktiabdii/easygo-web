@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { setAuth } from '../utils/authUtils';
 
 // inisiasi API URL
 const Login_API_URL = 'http://localhost:8000/api/auth/login'; 
@@ -11,6 +12,12 @@ const ResetPassword_API_URL = 'http://localhost:8000/api/auth/password/reset';
 export const login = async (email, password) => {
   try {
     const response = await axios.post(Login_API_URL, { email, password });
+    
+    // Store token with timestamp
+    if (response.data && response.data.token) {
+      setAuth(response.data.token);
+    }
+    
     return response.data; 
   } 
   
@@ -23,6 +30,12 @@ export const login = async (email, password) => {
 export const register = async (data) => {
   try {
     const response = await axios.post(Register_API_URL, data);
+    
+    // simpan token jika otomatis login setelah register
+    if (response.data && response.data.token) {
+      setAuth(response.data.token);
+    }
+    
     return response.data; 
   } 
   
@@ -65,4 +78,12 @@ export const resetPassword = async (email, otp, password, password_confirmation)
   catch (error) {
     throw error.response ? error.response.data : error.message; 
   }
+};
+
+// fungsi untuk logout
+export const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('tokenTimestamp');
+  
+  delete axios.defaults.headers.common['Authorization'];
 };
