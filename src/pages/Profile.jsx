@@ -2,11 +2,43 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Slider from "react-slick";
 import NavbarBack from "../components/NavbarBack";
+import ReviewCard from "../components/ReviewCard";
 import LogoutDialog from "../components/LogoutDialog";
 import { logout } from '../utils/authUtils';
 
+const reviews = [
+  {
+    image: "../assets/universitas-brawijaya.jpg",
+    title: "Universitas Brawijaya",
+    address: "Jl. Veteran No.8, Malang",
+    rating: 4.9,
+    features: ["Ramah Disabilitas", "Akses Mudah"]
+  },
+  {
+    image: "../assets/UnivIndo.jpeg",
+    title: "Universitas Indonesia",
+    address: "Depok, Jawa Barat",
+    rating: 4.7,
+    features: ["Fasilitas Lengkap", "Lingkungan Nyaman"]
+  }
+];
+
 const Profile = () => {
   const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const prevReview = () => {
+    setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
+  };
+
+  const nextReview = () => {
+    setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleProfileEdit = () => {
+    navigate('/edit-profile'); // Ganti path sesuai dengan rute yang kamu definisikan
+  };
+
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const logoutDialogRef = useRef(null);
   
@@ -26,16 +58,16 @@ const Profile = () => {
     setShowLogoutDialog(false);
     navigate('/login'); 
   };
-  
+
   // Setting carousel
-  const reviewSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-  };
+    const reviewSettings = {
+        dots: true,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        arrows: false,
+    };
 
   return (
     <div>
@@ -45,85 +77,102 @@ const Profile = () => {
         {/* Main Content */}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Card */}
-          <div className="w-[460px] h-[700px] bg-blue-500 rounded-2xl p-8 text-center text-white shadow-md flex flex-col">
+          <div className="w-[460px] h-full bg-blue-500 rounded-2xl p-8 text-center text-white shadow-md flex flex-col">
             {/* Header baru */}
-            <h2 className="text-[32px] font-bold mb-6">Profile Pengguna</h2>
+            <h2 className="text-3xl font-bold mb-6">Profile Pengguna</h2>
 
             {/* Foto Profil */}
             <div className="flex justify-center mb-4">
               <img
                 src="/users/profile-picture.jpg"
                 alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border-4 border-white"
+                className="w-45 h-45 rounded-full object-cover"
               />
             </div>
             <h2 className="text-2xl font-bold">Jastin White</h2>
             <p className="text-sm mt-1">Malang, Jawa Timur</p>
 
             {/* Ulasan Terbaru */}
-            <div className="mt-8 flex-1 overflow-hidden flex flex-col">
+            <div className="mt-14 flex-1 overflow-hidden flex flex-col">
               <h3 className="text-lg font-semibold mb-4">Ulasan Terbaru</h3>
-              <div className="px-4">
-                <Slider {...reviewSettings}>
-                  {/* Card Ulasan */}
-                  <div className="p-2">
-                    <div className="bg-white rounded-xl p-4 w-40 text-black shadow mx-auto">
-                      <h4 className="font-bold text-sm">Universitas Brawijaya</h4>
-                      <p className="text-xs text-gray-500">Jl. Veteran No.8, Malang</p>
+              <div className="flex justify-center items-center gap-4">
+                <button
+                  onClick={prevReview}
+                  className="text-white text-3xl hover:text-gray-300"
+                >
+                  ‹
+                </button>
+                
+                <div className="relative w-[300px] h-[185px]">
+                  {reviews.map((review, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-opacity duration-500 ease-in-out
+                        ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                      `}
+                    >
+                      <ReviewCard {...review} />
                     </div>
-                  </div>
-                  <div className="p-2">
-                    <div className="bg-white rounded-xl p-4 w-40 text-black shadow mx-auto">
-                      <h4 className="font-bold text-sm">Universitas Indonesia</h4>
-                      <p className="text-xs text-gray-500">Depok, Jawa Barat</p>
-                    </div>
-                  </div>
-                </Slider>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={nextReview}
+                  className="text-white text-3xl hover:text-gray-300"
+                >
+                  ›
+                </button>
               </div>
             </div>
 
             {/* Kontak */}
-            <div className="mt-8 flex justify-center gap-6">
-              <button className="bg-white p-3 rounded-full text-blue-500">
-                ✉️
-              </button>
-              <button className="bg-white p-3 rounded-full text-blue-500">
-                📞
-              </button>
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-2 text-white">Kontak</h3>
+              <div className="flex justify-center gap-3">
+                <button className="bg-white p-3 rounded-full text-blue-500 flex items-center justify-center">
+                  <img src="/icons/email-icon.png" alt="Email" className="w-5 h-5" />
+                </button>
+                <button className="bg-white p-3 rounded-full text-blue-500 flex items-center justify-center">
+                  <img src="/icons/phone-icon.png" alt="Phone" className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Right Form */}
-          <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-8 shadow-md">
-            <h2 className="text-[32px] font-bold mb-6 border-b pb-2 border-blue-300">Edit Profile</h2>
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-              {/* Left Column */}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[18px] font-semibold">Nama Pengguna</label>
-                  <input
-                    type="text"
-                    value="Jastin White"
-                    className="w-full p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
-                </div>
-                <div className="mt-10">
-                  <label className="text-[18px] font-semibold">Nomor Telepon</label>
-                  <input
-                    type="text"
-                    value="+62 812 345 6789"
-                    className="w-full p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
-                </div>
-                <div className="mt-10">
-                  <label className="text-[18px] font-semibold">Provinsi</label>
-                  <input
-                    type="text"
-                    value="Jawa Timur"
-                    className="w-full p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
-                  />
-                </div>
-              </div>
+                        {/* Right Form */}
+                        <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-8 shadow-md">
+                        <h2 className="text-[32px] font-bold mb-6 border-b pb-2 border-blue-300">Edit Profile</h2>
+                        <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+                            {/* Left Column */}
+                            <div className="space-y-4">
+                            <div>
+                              <label className="text-[18px] font-semibold">Nama Pengguna</label>
+                              <input
+                                type="text"
+                                value="Jastin White"
+                                className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                readOnly
+                              />
+                            </div>
+                            <div className="mt-14">
+                            <label className="text-[18px] font-semibold">Nomor Telepon</label>
+                            <input
+                              type="text"
+                              value="+62 812 345 6789"
+                              className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              readOnly
+                            />
+                          </div>
+                          <div className="mt-14">
+                            <label className="text-[18px] font-semibold">Provinsi</label>
+                            <input
+                              type="text"
+                              value="Jawa Timur"
+                              className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              readOnly
+                            />
+                          </div>
+                            </div>
 
               {/* Right Column */}
               <div className="space-y-4">
@@ -132,45 +181,49 @@ const Profile = () => {
                   <input
                     type="email"
                     value="jastinwhite99@email.com"
-                    className="w-full p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
-                <div className="mt-10">
+                <div className="mt-14">
                   <label className="text-[18px] font-semibold">Negara</label>
                   <input
                     type="text"
                     value="Indonesia"
-                    className="w-full p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
-                <div className="mt-10">
+                <div className="mt-14">
                   <label className="text-[18px] font-semibold">Kota/Kabupaten</label>
                   <input
                     type="text"
                     value="Malang"
-                    className="w-full p-2 mt-1 border rounded-md focus:ring focus:ring-blue-300 text-[20px]"
+                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    readOnly
                   />
                 </div>
-              </div>
-            </form>
+            </div>
+          </form>
 
-            <div className="flex gap-4 justify-end mt-6">
+        <div className="flex justify-end mt-6">
+          <div className="flex gap-4 justify-end mt-6">
               <button 
                 onClick={handleLogoutClick} // Mengubah event handler untuk menampilkan dialog logout
                 type="button"
-                className="bg-[#E63C3C] text-white px-6 py-2 rounded-md hover:bg-[#E63000] transition mt-10"
+                className="bg-[#E63C3C] text-white px-6 py-2 rounded-md hover:bg-[#E63000] transition mt-24"
               >
                 Logout
               </button>
-              <button className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-10">
+          <button
+                onClick={handleProfileEdit}
+                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-24"
+              >
                 Edit Profile
               </button>
-            </div>
           </div>
         </div>
       </div>
-      
-      {/* Render Logout Dialog jika showLogoutDialog adalah true */}
       {showLogoutDialog && (
         <LogoutDialog
           ref={logoutDialogRef}
@@ -178,6 +231,8 @@ const Profile = () => {
           onCancel={handleCancelLogout}
         />
       )}
+    </div>
+    </div>
     </div>
   );
 };
