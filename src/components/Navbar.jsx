@@ -183,7 +183,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         <div className="flex items-center space-x-6">
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Tentang</button>
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Pedoman</button>
-          <img src="/icons/user.png" alt="User " className="h-10 w-10 object-contain" onClick={() => navigate('/profile')}/>
+          <img src="/icons/user.png" alt="User " className="h-10 w-10 object-contain cursor-pointer" onClick={() => navigate('/profile')}/>
         </div>
       </nav>
 
