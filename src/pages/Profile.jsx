@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Slider from "react-slick";
 import NavbarBack from "../components/NavbarBack";
 import ReviewCard from "../components/ReviewCard";
+import LogoutDialog from "../components/LogoutDialog";
+import { logout } from '../utils/authUtils';
 
 const reviews = [
   {
@@ -36,15 +39,46 @@ const Profile = () => {
     navigate('/edit-profile'); // Ganti path sesuai dengan rute yang kamu definisikan
   };
 
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const logoutDialogRef = useRef(null);
+  
+  // Fungsi untuk menampilkan dialog logout
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+  
+  // Fungsi untuk menutup dialog
+  const handleCancelLogout = () => {
+    setShowLogoutDialog(false);
+  };
+  
+  // Fungsi untuk melakukan logout
+  const handleConfirmLogout = () => {
+    logout(); 
+    setShowLogoutDialog(false);
+    navigate('/login'); 
+  };
+
+  // Setting carousel
+    const reviewSettings = {
+        dots: true,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        arrows: false,
+    };
+
   return (
     <div>
-      <NavbarBack title="Profile" showAvatar={false} />
-
-      <div className="min-h-screen bg-[#F5F6FA] p-8 relative">
+      <NavbarBack title="Profile" showAvatar={true} />
+    
+      <div className="min-h-screen bg-[#F5F6FA] p-8 relative ">
+        {/* Main Content */}
         <div className="flex flex-col lg:flex-row gap-8">
-          
           {/* Left Card */}
           <div className="w-[460px] h-full bg-blue-500 rounded-2xl p-8 text-center text-white shadow-md flex flex-col">
+            {/* Header baru */}
             <h2 className="text-3xl font-bold mb-6">Profile Pengguna</h2>
 
             {/* Foto Profil */}
@@ -105,39 +139,42 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Right Form */}
-          <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-8 shadow-md">
-            <h2 className="text-[32px] font-bold mb-6 border-b pb-2 border-blue-300">Profile</h2>
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[18px] font-semibold">Nama Pengguna</label>
-                  <input
-                    type="text"
-                    value="Jastin White"
-                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    readOnly
-                  />
-                </div>
-                <div className="mt-14">
-                  <label className="text-[18px] font-semibold">Nomor Telepon</label>
-                  <input
-                    type="text"
-                    value="+62 812 345 6789"
-                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    readOnly
-                  />
-                </div>
-                <div className="mt-14">
-                  <label className="text-[18px] font-semibold">Provinsi</label>
-                  <input
-                    type="text"
-                    value="Jawa Timur"
-                    className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    readOnly
-                  />
-                </div>
-              </div>
+                        {/* Right Form */}
+                        <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-8 shadow-md">
+                        <h2 className="text-[32px] font-bold mb-6 border-b pb-2 border-blue-300">Edit Profile</h2>
+                        <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+                            {/* Left Column */}
+                            <div className="space-y-4">
+                            <div>
+                              <label className="text-[18px] font-semibold">Nama Pengguna</label>
+                              <input
+                                type="text"
+                                value="Jastin White"
+                                className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                readOnly
+                              />
+                            </div>
+                            <div className="mt-14">
+                            <label className="text-[18px] font-semibold">Nomor Telepon</label>
+                            <input
+                              type="text"
+                              value="+62 812 345 6789"
+                              className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              readOnly
+                            />
+                          </div>
+                          <div className="mt-14">
+                            <label className="text-[18px] font-semibold">Provinsi</label>
+                            <input
+                              type="text"
+                              value="Jawa Timur"
+                              className="w-full h-[50px] px-4 py-2 mt-1 bg-white text-gray-800 text-[20px] rounded-xl shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              readOnly
+                            />
+                          </div>
+                            </div>
+
+              {/* Right Column */}
               <div className="space-y-4">
                 <div>
                   <label className="text-[18px] font-semibold">Alamat Email</label>
@@ -166,19 +203,36 @@ const Profile = () => {
                     readOnly
                   />
                 </div>
-              </div>
-            </form>
-            <div className="flex justify-end mt-6">
-              <button
+            </div>
+          </form>
+
+        <div className="flex justify-end mt-6">
+          <div className="flex gap-4 justify-end mt-6">
+              <button 
+                onClick={handleLogoutClick} // Mengubah event handler untuk menampilkan dialog logout
+                type="button"
+                className="bg-[#E63C3C] text-white px-6 py-2 rounded-md hover:bg-[#E63000] transition mt-24"
+              >
+                Logout
+              </button>
+          <button
                 onClick={handleProfileEdit}
                 className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-24"
               >
                 Edit Profile
               </button>
-            </div>
           </div>
         </div>
       </div>
+      {showLogoutDialog && (
+        <LogoutDialog
+          ref={logoutDialogRef}
+          onConfirm={handleConfirmLogout}
+          onCancel={handleCancelLogout}
+        />
+      )}
+    </div>
+    </div>
     </div>
   );
 };

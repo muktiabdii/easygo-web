@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import useSpeechRecognition from '../hooks/useSpeechRecognition'; 
 import { useNavigate } from 'react-router-dom';
-
-
+import AuthDialog from './AuthDialog'; // Import AuthDialog
+import { isAuthenticated } from '../utils/authUtils'; // Import isAuthenticated function
 
 const filterOptions = [
   { label: "Lift Braille & Suara", icon: "/icons/lift.png" },
@@ -20,6 +20,8 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [searchValue, setSearchValue] = useState('');
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // State for showing auth dialog
+  const [redirectPath, setRedirectPath] = useState(""); // State for redirect path
 
   // speech recognition hook
   const { isListening, toggleSpeechRecognition, searchInputRef, transcript } = useSpeechRecognition((e) => {
@@ -71,17 +73,38 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
     }
   };
 
+  // Handler for profile click
+  const handleProfileClick = () => {
+    if (isAuthenticated()) {
+      navigate('/profile'); // Navigate to profile if authenticated
+    } else {
+      setRedirectPath('/profile'); // Set redirect path
+      setShowAuthDialog(true); // Show auth dialog
+    }
+  };
+
+  // Handler for login action
+  const handleLogin = () => {
+    setShowAuthDialog(false);
+    navigate("/login", { state: { from: redirectPath } });
+  };
+
+  // Handler for cancel action
+  const handleCancelAuth = () => {
+    setShowAuthDialog(false);
+  };
+
   return (
     <>
       {isFilterOpen && (
         <div
-          className="fixed inset-0 backdrop-blur-sm bg-white/5 z-[1001]"
+          className="fixed inset-0 backdrop-blur-xs bg-white/5 z-[1001]"
           onClick={toggleFilter}
         />
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
+ className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
           isFilterOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -98,7 +121,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
                 className="flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-[#357FCC] transition-colors duration-200"
               >
                 <div className="flex items-center space-x-3">
-                  <img src={filter.icon} alt={filter.label} className="h- 6 w-6" />
+                  <img src={filter.icon} alt={filter.label} className="h-6 w-6" />
                   <span className="text-sm">{filter.label}</span>
                 </div>
                 <input
@@ -163,6 +186,16 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
           <img src="/icons/user.png" alt="User " className="h-10 w-10 object-contain" onClick={() => navigate('/profile')}/>
         </div>
       </nav>
+
+      {/* Render dialog autentikasi jika showAuthDialog true */}
+      {showAuthDialog && (
+        <div className="fixed inset-0 z-[1001]">
+          <AuthDialog 
+            onLogin={handleLogin} 
+            onCancel={handleCancelAuth} 
+          />
+        </div>
+      )}
     </>
   );
 }

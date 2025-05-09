@@ -10,7 +10,7 @@ const Review = ({ review, onReviewChange }) => {
           placeholder="Tuliskan Ulasan Anda di Sini..."
           value={review}
           onChange={onReviewChange}
-          className="border border-[#3C91E6] rounded p-3 w-full h-80 resize-none focus:outline-none focus:border-2"
+          className="border-2 border-[#3C91E6] rounded-lg p-3 w-full h-80 resize-none focus:outline-none focus:border-3"
         ></textarea>
         <button 
           type="button" 
