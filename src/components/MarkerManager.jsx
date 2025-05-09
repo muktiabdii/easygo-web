@@ -1,138 +1,188 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Marker, useMap, useMapEvents } from 'react-leaflet';
-import { useNavigate } from 'react-router-dom';
-import L from 'leaflet';
-import Popup from './Popup'; 
+import React, { useState, useRef, useEffect } from "react";
+import { useMap, useMapEvents } from "react-leaflet";
+import { useNavigate } from "react-router-dom";
+import L from "leaflet";
+import "../MarkerStyles.css";
+import Popup from "./Popup";
+import PreviewMarker from "./PreviewMarker";
+import PlaceMarkers from "./PlaceMarker";
+import useFilteredPlaces from "../hooks/useFilteredPlaces";
+import useCustomMarkers from "../hooks/useCustomMarkers";
+import { isAuthenticated } from "../utils/authUtils";
+import AuthDialog from "./AuthDialog"; 
 
-const MarkerManager = ({ places }) => {
+const MarkerManager = ({
+  places,
+  searchQuery = "",
+  activeFilters = [],
+  isSearchActive = false,
+}) => {
   const [previewPosition, setPreviewPosition] = useState(null);
   const [popupPosition, setPopupPosition] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [justClosedPopup, setJustClosedPopup] = useState(false);
+  const authDialogRef = useRef(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+
   const map = useMap();
-  const markerRef = useRef(null);
   const navigate = useNavigate();
 
+  // Custom hooks
+  const { filteredPlaces } = useFilteredPlaces(
+    places,
+    searchQuery,
+    activeFilters,
+    isSearchActive,
+    map
+  );
+  useCustomMarkers(
+    filteredPlaces,
+    map,
+    isSearchActive,
+    searchQuery,
+    handleMarkerClick
+  );
+
+  function handleMarkerClick(e, place) {
+    L.DomEvent.stopPropagation(e);
+    const latlng = L.latLng(place.latitude, place.longitude);
+
+    flyToLocation(latlng);
+    openPopup(latlng, place);
+  }
+
+  const flyToLocation = (latlng) => {
+    map.flyTo(latlng, 16, {
+      animate: true,
+      duration: 0.5,
+    });
+  };
+
+  const openPopup = (latlng, place = null) => {
+    const pixelPosition = map.latLngToContainerPoint(latlng);
+    setPopupPosition({
+      latlng: latlng,
+      pixel: {
+        x: pixelPosition.x,
+        y: pixelPosition.y,
+      },
+    });
+
+    setIsPopupOpen(true);
+    setSelectedPlace(place);
+    setPreviewPosition(place ? null : latlng);
+  };
+
+  // Map click events
   useMapEvents({
     click(e) {
-      if (!isPopupOpen) {
-        const latlng = e.latlng;
-        setPreviewPosition(latlng);
-        
-        const pixelPosition = map.latLngToContainerPoint(latlng);
-        setPopupPosition({
-          latlng: latlng,
-          pixel: {
-            x: pixelPosition.x,
-            y: pixelPosition.y
-          }
-        });
-        
-        setIsPopupOpen(true);
-        setSelectedPlace(null);
-        
-        map.flyTo(latlng, 16, { 
-          animate: true,
-          duration: 0.5 
-        });
+      if (isPopupOpen) return;
+      if (justClosedPopup) {
+        setJustClosedPopup(false);
+        return;
       }
-    }
+
+      const latlng = e.latlng;
+      flyToLocation(latlng);
+      openPopup(latlng);
+    },
   });
 
   const handleAddPlace = (e) => {
     e.stopPropagation();
-    if (previewPosition) {
-      navigate('/tambah-tempat', { state: { position: previewPosition } });
+
+    if (isAuthenticated()) {
+      if (previewPosition) {
+        navigate("/tambah-tempat", { state: { position: previewPosition } });
+      } else {
+        navigate("/tambah-tempat");
+      }
+    } else {
+      setShowAuthDialog(true);
     }
   };
 
   const handleClosePopup = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    setJustClosedPopup(true);
+
+    if (window.popupCloseTimeout) {
+      clearTimeout(window.popupCloseTimeout);
+    }
+
+    window.popupCloseTimeout = setTimeout(() => {
+      setJustClosedPopup(false);
+    }, 300);
+
     setPreviewPosition(null);
     setPopupPosition(null);
     setIsPopupOpen(false);
     setSelectedPlace(null);
   };
 
-  const handleMarkerClick = (e, place) => {
-    e.originalEvent.stopPropagation();
-    const latlng = L.latLng(place.latitude, place.longitude);
-    
-    map.flyTo(latlng, 16, { 
-      animate: true,
-      duration: 0.5 
-    });
-  
-    const pixelPosition = map.latLngToContainerPoint(latlng);
-    setPopupPosition({
-      latlng: latlng,
-      pixel: {
-        x: pixelPosition.x,
-        y: pixelPosition.y
-      }
-    });
-    
-    setIsPopupOpen(true);
-    setSelectedPlace(place);
-    setPreviewPosition(null); 
-  };
-
   const handleViewDetail = (e) => {
     e.stopPropagation();
-    console.log('View detail for:', selectedPlace);
+    if (selectedPlace) {
+      navigate("/place-detail", { state: { placeName: selectedPlace.name } });
+    }
   };
 
+  // Handler untuk tombol "Masuk" pada dialog
+  const handleLogin = () => {
+    setShowAuthDialog(false);
+    navigate("/login");
+  };
+
+  // Handler untuk tombol "Batal" pada dialog
+  const handleCancelAuth = () => {
+    setShowAuthDialog(false);
+    // Tidak perlu navigasi, tetap di halaman yang sama
+  };
+
+  // perbarui posisi popup saat zoom atau move
   useEffect(() => {
     if (!popupPosition) return;
 
     const updatePopupPosition = () => {
       const newPixelPos = map.latLngToContainerPoint(popupPosition.latlng);
-      setPopupPosition(prev => ({
+      setPopupPosition((prev) => ({
         ...prev,
         pixel: {
           x: newPixelPos.x,
-          y: newPixelPos.y
-        }
+          y: newPixelPos.y,
+        },
       }));
     };
 
-    map.on('zoom', updatePopupPosition);
-    map.on('move', updatePopupPosition);
+    map.on("zoom", updatePopupPosition);
+    map.on("move", updatePopupPosition);
 
     return () => {
-      map.off('zoom', updatePopupPosition);
-      map.off('move', updatePopupPosition);
+      map.off("zoom", updatePopupPosition);
+      map.off("move", updatePopupPosition);
     };
   }, [map, popupPosition]);
 
+  useEffect(() => {
+    return () => {
+      if (window.popupCloseTimeout) {
+        clearTimeout(window.popupCloseTimeout);
+      }
+    };
+  }, []);
+
   return (
     <>
-      {previewPosition && (
-        <Marker
-          position={previewPosition}
-          icon={new L.Icon({
-            iconUrl: 'icons/red_marker.png',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45],
-          })}
-          ref={markerRef}
+      {previewPosition && <PreviewMarker position={previewPosition} />}
+
+      {!isSearchActive && (
+        <PlaceMarkers
+          places={filteredPlaces}
+          onMarkerClick={handleMarkerClick}
         />
       )}
-
-      {places.map((place, idx) => (
-        <Marker
-          key={`place-marker-${place.id || idx}`}
-          position={[place.latitude, place.longitude]}
-          icon={new L.Icon({
-            iconUrl: 'icons/blue_marker.png',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45],
-          })}
-          eventHandlers={{
-            click: (e) => handleMarkerClick(e, place)
-          }}
-        />
-      ))}
 
       {isPopupOpen && popupPosition && (
         <Popup
@@ -142,6 +192,18 @@ const MarkerManager = ({ places }) => {
           handleAddPlace={handleAddPlace}
           handleViewDetail={handleViewDetail}
         />
+      )}
+
+      {showAuthDialog && (
+        <>
+          <div className="fixed inset-0 z-[1001]">
+            <AuthDialog
+              ref={authDialogRef}
+              onLogin={handleLogin}
+              onCancel={handleCancelAuth}
+            />
+          </div>
+        </>
       )}
     </>
   );

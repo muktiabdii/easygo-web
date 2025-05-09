@@ -1,4 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import useSpeechRecognition from '../hooks/useSpeechRecognition'; 
+import { useNavigate } from 'react-router-dom';
+import AuthDialog from './AuthDialog'; // Import AuthDialog
+import { isAuthenticated } from '../utils/authUtils'; // Import isAuthenticated function
 
 const filterOptions = [
   { label: "Lift Braille & Suara", icon: "/icons/lift.png" },
@@ -9,33 +13,98 @@ const filterOptions = [
   { label: "Toilet Disabilitas", icon: "/icons/toilet.png" },
   { label: "Jalur Guiding Block", icon: "/icons/guiding-block.png" },
   { label: "Menu Braille", icon: "/icons/menu-braille.png" },
-]
+];
 
-const Navbar = ({ onSearchChange }) => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [selectedFilters, setSelectedFilters] = useState([])
+const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground }) => {
+  const navigate = useNavigate();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [searchValue, setSearchValue] = useState('');
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // State for showing auth dialog
+  const [redirectPath, setRedirectPath] = useState(""); // State for redirect path
 
-  const toggleFilter = () => setIsFilterOpen(!isFilterOpen)
+  // speech recognition hook
+  const { isListening, toggleSpeechRecognition, searchInputRef, transcript } = useSpeechRecognition((e) => {
+    setSearchValue(e.target.value);
+    if (onSearchChange) {
+      onSearchChange(e);
+    }
+    // Auto-submit using speech recognition
+    if (onSearchSubmit && e.target.value.trim() !== '') {
+      onSearchSubmit();
+    }
+  });
+
+  useEffect(() => {
+    if (onFilterChange) {
+      onFilterChange(selectedFilters);
+    }
+  }, [selectedFilters, onFilterChange]);
+
+  const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
 
   const handleCheckboxChange = (label) => {
     setSelectedFilters((prev) =>
       prev.includes(label)
         ? prev.filter((item) => item !== label)
         : [...prev, label]
-    )
-  }
+    );
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value); 
+    if (onSearchChange) {
+      onSearchChange(e); 
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && searchValue.trim() !== '') {
+      if (onSearchSubmit) {
+        onSearchSubmit();
+      }
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (onSearchSubmit && searchValue.trim() !== '') {
+      onSearchSubmit();
+    }
+  };
+
+  // Handler for profile click
+  const handleProfileClick = () => {
+    if (isAuthenticated()) {
+      navigate('/profile'); // Navigate to profile if authenticated
+    } else {
+      setRedirectPath('/profile'); // Set redirect path
+      setShowAuthDialog(true); // Show auth dialog
+    }
+  };
+
+  // Handler for login action
+  const handleLogin = () => {
+    setShowAuthDialog(false);
+    navigate("/login", { state: { from: redirectPath } });
+  };
+
+  // Handler for cancel action
+  const handleCancelAuth = () => {
+    setShowAuthDialog(false);
+  };
 
   return (
     <>
       {isFilterOpen && (
         <div
-          className="fixed inset-0 backdrop-blur-sm bg-white/5 z-[1001]"
+          className="fixed inset-0 backdrop-blur-xs bg-white/5 z-[1001]"
           onClick={toggleFilter}
         />
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
+ className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
           isFilterOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -66,7 +135,7 @@ const Navbar = ({ onSearchChange }) => {
         </div>
       </div>
 
-      <nav className="fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000]">
+      <nav className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${hideBackground ? 'bg-transparent' : 'bg-[#EFF0F7] text-white'}`}>
         <div className="flex items-center space-x-4">
           <button onClick={toggleFilter}>
             <img
@@ -80,32 +149,55 @@ const Navbar = ({ onSearchChange }) => {
 
           <div className="relative ml-4 w-100">
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Cari fasilitas aksesibilitas.."
               className="w-full pl-4 pr-20 py-2 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
-              onChange={onSearchChange}
+              value={searchValue} 
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
             />
             <img
               src="/icons/search.png"
               alt="Search"
-              className="absolute right-10 top-2.5 h-5 w-5 text-gray-500"
+              className="absolute right-10 top-2.5 h-5 w-5 text-gray-500 cursor-pointer"
+              onClick={handleSearchClick}
             />
-            <img
-              src="/icons/mic.png"
-              alt="Mic"
-              className="absolute right-3 top-2.5 h-5 w-5 text-gray-500"
-            />
+            <button 
+              onClick={toggleSpeechRecognition}
+              className="absolute right-3 top-2.5 h-5 w-5 flex items-center justify-center cursor-pointer"
+            >
+              <img
+                src="/icons/mic.png"
+                alt="Mic"
+                className={`h-5 w-5 ${isListening ? 'opacity-100 animate-pulse' : 'opacity-100'}`}
+                style={{
+                  animationDuration: isListening ? '0.6s' : '0s',
+                  animationTimingFunction: 'ease-in-out'
+                }}
+              />
+            </button>
           </div>
         </div>
 
         <div className="flex items-center space-x-6">
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Tentang</button>
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Pedoman</button>
-          <img src="/icons/user.png" alt="User" className="h-10 w-10 object-contain" />
+          <img src="/icons/user.png" alt="User " className="h-10 w-10 object-contain cursor-pointer" onClick={handleProfileClick}/>
         </div>
       </nav>
+
+      {/* Render dialog autentikasi jika showAuthDialog true */}
+      {showAuthDialog && (
+        <div className="fixed inset-0 z-[1001]">
+          <AuthDialog 
+            onLogin={handleLogin} 
+            onCancel={handleCancelAuth} 
+          />
+        </div>
+      )}
     </>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;

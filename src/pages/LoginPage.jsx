@@ -18,11 +18,8 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await loginUser(email, password);
-    
-    if (success) {
-      navigate('/dashboard');
-    }
   };
+  
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
       
@@ -58,7 +55,7 @@ const LoginPage = () => {
               className="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <div className="text-right text-sm">
-              <a href="/forgot-password" className="hover:underline font-light">Lupa kata sandi?</a>
+              <a href="/forgot-password-step-one" className="hover:underline font-light">Lupa kata sandi?</a>
             </div>
             <button
               type="submit"

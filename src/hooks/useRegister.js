@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { register } from '../services/authService'; 
 
 export const useRegister = () => {
-
-  // inisiasi state
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -14,6 +14,8 @@ export const useRegister = () => {
     setError(null);
     try {
       const response = await register(data);
+      navigate('/login'); 
+
       if (response) {
         setSuccess(true);
         return true;
