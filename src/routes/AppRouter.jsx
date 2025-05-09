@@ -9,11 +9,13 @@ import ForgotPasswordStepThree from '../pages/ForgotPasswordStepThree';
 import Dashboard from '../pages/Dashboard'
 import ChatPage from '../pages/ChatPage'
 import AddPlace from "../pages/AddPlace";
+import AddReview from "../pages/AddReview";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
 import PrivateRoute from '../components/PrivateRoute';
 import { checkTokenValidity } from '../utils/authUtils';
 import { RegistrationProvider } from '../contexts/RegistrationContext';
+import ProfileEdit from "../pages/ProfileEdit";
 
 export default function AppRouter() {
   useEffect(() => {
@@ -21,6 +23,7 @@ export default function AppRouter() {
   }, []);
 
   return (
+
     <RegistrationProvider>
       <BrowserRouter>
         <Routes>
@@ -33,6 +36,16 @@ export default function AppRouter() {
           <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/place-detail" element={<PlaceDetail />} />
+          <Route path="/tambah-review" element={<AddReview />} />
+          <Route path="/edit-profile" element={<ProfileEdit />} />
+          <Route 
+            path="/profile" 
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            } 
+          />
           {/* Protected routes */}
           <Route 
             path="/tambah-tempat" 
@@ -50,19 +63,15 @@ export default function AppRouter() {
               </PrivateRoute>
             } 
           />
-          <Route 
-            path="/profile" 
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            } 
-          />
+          
+
+          
           
           {/* Fallback route */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </RegistrationProvider>
+
   );
 }
