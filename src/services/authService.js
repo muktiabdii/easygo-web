@@ -1,24 +1,41 @@
 import axios from 'axios';
+import { setAuth } from '../utils/authUtils';
 
 const BASE_URL = 'http://localhost:8000/api/auth';
 
 // fungsi untuk login
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${BASE_URL}/login`, { email, password });
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error.message;
+    const response = await axios.post(Login_API_URL, { email, password });
+    
+    // Store token with timestamp
+    if (response.data && response.data.token) {
+      setAuth(response.data.token);
+    }
+    
+    return response.data; 
+  } 
+  
+  catch (error) {
+    throw error.response ? error.response.data : error.message; 
   }
 };
 
 // fungsi untuk register
 export const register = async (data) => {
   try {
-    const response = await axios.post(`${BASE_URL}/register`, data);
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error.message;
+    const response = await axios.post(Register_API_URL, data);
+    
+    // simpan token jika otomatis login setelah register
+    if (response.data && response.data.token) {
+      setAuth(response.data.token);
+    }
+    
+    return response.data; 
+  } 
+  
+  catch (error) {
+    throw error.response ? error.response.data : error.message; 
   }
 };
 
@@ -55,4 +72,12 @@ export const resetPassword = async (email, otp, password, password_confirmation)
   } catch (error) {
     throw error.response ? error.response.data : error.message;
   }
+};
+
+// fungsi untuk logout
+export const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('tokenTimestamp');
+  
+  delete axios.defaults.headers.common['Authorization'];
 };
