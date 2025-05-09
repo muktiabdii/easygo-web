@@ -1,174 +1,174 @@
 import React, { useState, useRef, useEffect } from "react";
 import NavbarBack from "../components/NavbarBack";
 
-const users = [
-  {
-    name: "James",
-    lastMessage: "Aku lihat sepertinya kau kesulitan mencari akses kursi roda?",
-    time: "9:23 PM",
-    img: "/users/james.jpg",
-    city: "Malang",
-    lastActive: "3 April",
-    reviewCount: 120,
-    messages: [
-      {
-        text: "Hey bung! Apa kabar hari ini?",
-        time: "9:00 PM",
-        date: "2025-04-28",
-      },
-      {
-        text: "Aku lihat sepertinya kau kesulitan mencari akses kursi roda?",
-        time: "9:23 PM",
-        date: "2025-04-28",
-      },
-      {
-        text: "Aku bantu cari informasi ya.",
-        time: "9:27 PM",
-        date: "2025-04-28",
-      },
-    ],
-  },
-  {
-    name: "Rickley",
-    lastMessage: "Sama-sama, semoga membantu!",
-    time: "12:45 AM",
-    img: "/users/rickley.jpg",
-    city: "Surabaya",
-    lastActive: "2 April",
-    reviewCount: 85,
-    messages: [
-      {
-        text: "Aku baru saja melihat reviewmu bung, terima kasih banyak!",
-        time: "12:30 AM",
-        date: "2025-04-02",
-      },
-      {
-        text: "Kalau butuh rekomendasi lain, kabarin aja ya.",
-        time: "1:00 AM",
-        date: "2025-04-02",
-      },
-      {
-        text: "By the way, aku juga menemukan tempat lain yang mungkin kamu suka.",
-        time: "1:30 AM",
-        date: "2025-04-03",
-      },
-    ],
-  },
-  {
-    name: "Billy",
-    lastMessage: "Tentu, kapan saja!",
-    time: "10:45 AM",
-    img: "/users/billy.jpg",
-    city: "Bandung",
-    lastActive: "1 April",
-    reviewCount: 60,
-    messages: [
-      {
-        text: "Heyy, kamu terlihat keren, mau jalan sama aku ga?",
-        time: "10:30 AM",
-        date: "2025-04-01",
-      },
-      {
-        text: "Mungkin akhir pekan ini?",
-        time: "11:00 AM",
-        date: "2025-04-01",
-      },
-      {
-        text: "Aku pikir hari Sabtu bisa jadi pilihan yang baik.",
-        time: "11:30 AM",
-        date: "2025-04-02",
-      },
-    ],
-  },
-  {
-    name: "Sarah",
-    lastMessage: "Besok kita bertemu ya!",
-    time: "4:00 PM",
-    img: "/users/sarah.jpg",
-    city: "Jakarta",
-    lastActive: "29 Maret",
-    reviewCount: 150,
-    messages: [
-      {
-        text: "Halo! Aku baru daftar aplikasi ini.",
-        time: "3:00 PM",
-        date: "2025-03-29",
-      },
-      {
-        text: "Terima kasih, senang bertemu kamu.",
-        time: "3:20 PM",
-        date: "2025-03-29",
-      },
-    ],
-  },
-  {
-    name: "Michael",
-    lastMessage: "Aku bisa rekomendasikan beberapa tempat bagus.",
-    time: "2:15 PM",
-    img: "/users/michael.jpg",
-    city: "Yogyakarta",
-    lastActive: "31 Maret",
-    reviewCount: 200,
-    messages: [
-      {
-        text: "Hai, kamu tau tempat makan ramah disabilitas?",
-        time: "2:00 PM",
-        date: "2025-03-31",
-      },
-      {
-        text: "Aku bisa rekomendasikan beberapa tempat bagus.",
-        time: "2:15 PM",
-        date: "2025-03-31",
-      },
-      {
-        text: "Nanti aku kirim daftarnya ya.",
-        time: "2:30 PM",
-        date: "2025-03-31",
-      },
-    ],
-  },
-  {
-    name: "Emma",
-    lastMessage: "Aku support selalu!",
-    time: "5:30 PM",
-    img: "/users/emma.jpg",
-    city: "Semarang",
-    lastActive: "1 April",
-    reviewCount: 95,
-    messages: [
-      {
-        text: "Lihat perkembangan aplikasi ini keren banget.",
-        time: "5:00 PM",
-        date: "2025-04-01",
-      },
-      { text: "Aku support selalu!", 
-        time: "5:30 PM", 
-        date: "2025-04-01" 
-      },
-    ],
-  },
-  {
-    name: "Daniel",
-    lastMessage: "Kalau mau, kita bisa buat komunitas kecil.",
-    time: "6:45 PM",
-    img: "/users/daniel.jpg",
-    city: "Bali",
-    lastActive: "30 Maret",
-    reviewCount: 110,
-    messages: [
-      {
-        text: "Aku ingin berbagi pengalaman tentang aksesibilitas.",
-        time: "6:00 PM",
-        date: "2025-03-30",
-      },
-      {
-        text: "Kalau mau, kita bisa buat komunitas kecil.",
-        time: "6:45 PM",
-        date: "2025-03-30",
-      },
-    ],
-  },
-];
+// const users = [
+//   {
+//     name: "James",
+//     lastMessage: "Aku lihat sepertinya kau kesulitan mencari akses kursi roda?",
+//     time: "9:23 PM",
+//     img: "/users/james.jpg",
+//     city: "Malang",
+//     lastActive: "3 April",
+//     reviewCount: 120,
+//     messages: [
+//       {
+//         text: "Hey bung! Apa kabar hari ini?",
+//         time: "9:00 PM",
+//         date: "2025-04-28",
+//       },
+//       {
+//         text: "Aku lihat sepertinya kau kesulitan mencari akses kursi roda?",
+//         time: "9:23 PM",
+//         date: "2025-04-28",
+//       },
+//       {
+//         text: "Aku bantu cari informasi ya.",
+//         time: "9:27 PM",
+//         date: "2025-04-28",
+//       },
+//     ],
+//   },
+//   {
+//     name: "Rickley",
+//     lastMessage: "Sama-sama, semoga membantu!",
+//     time: "12:45 AM",
+//     img: "/users/rickley.jpg",
+//     city: "Surabaya",
+//     lastActive: "2 April",
+//     reviewCount: 85,
+//     messages: [
+//       {
+//         text: "Aku baru saja melihat reviewmu bung, terima kasih banyak!",
+//         time: "12:30 AM",
+//         date: "2025-04-02",
+//       },
+//       {
+//         text: "Kalau butuh rekomendasi lain, kabarin aja ya.",
+//         time: "1:00 AM",
+//         date: "2025-04-02",
+//       },
+//       {
+//         text: "By the way, aku juga menemukan tempat lain yang mungkin kamu suka.",
+//         time: "1:30 AM",
+//         date: "2025-04-03",
+//       },
+//     ],
+//   },
+//   {
+//     name: "Billy",
+//     lastMessage: "Tentu, kapan saja!",
+//     time: "10:45 AM",
+//     img: "/users/billy.jpg",
+//     city: "Bandung",
+//     lastActive: "1 April",
+//     reviewCount: 60,
+//     messages: [
+//       {
+//         text: "Heyy, kamu terlihat keren, mau jalan sama aku ga?",
+//         time: "10:30 AM",
+//         date: "2025-04-01",
+//       },
+//       {
+//         text: "Mungkin akhir pekan ini?",
+//         time: "11:00 AM",
+//         date: "2025-04-01",
+//       },
+//       {
+//         text: "Aku pikir hari Sabtu bisa jadi pilihan yang baik.",
+//         time: "11:30 AM",
+//         date: "2025-04-02",
+//       },
+//     ],
+//   },
+//   {
+//     name: "Sarah",
+//     lastMessage: "Besok kita bertemu ya!",
+//     time: "4:00 PM",
+//     img: "/users/sarah.jpg",
+//     city: "Jakarta",
+//     lastActive: "29 Maret",
+//     reviewCount: 150,
+//     messages: [
+//       {
+//         text: "Halo! Aku baru daftar aplikasi ini.",
+//         time: "3:00 PM",
+//         date: "2025-03-29",
+//       },
+//       {
+//         text: "Terima kasih, senang bertemu kamu.",
+//         time: "3:20 PM",
+//         date: "2025-03-29",
+//       },
+//     ],
+//   },
+//   {
+//     name: "Michael",
+//     lastMessage: "Aku bisa rekomendasikan beberapa tempat bagus.",
+//     time: "2:15 PM",
+//     img: "/users/michael.jpg",
+//     city: "Yogyakarta",
+//     lastActive: "31 Maret",
+//     reviewCount: 200,
+//     messages: [
+//       {
+//         text: "Hai, kamu tau tempat makan ramah disabilitas?",
+//         time: "2:00 PM",
+//         date: "2025-03-31",
+//       },
+//       {
+//         text: "Aku bisa rekomendasikan beberapa tempat bagus.",
+//         time: "2:15 PM",
+//         date: "2025-03-31",
+//       },
+//       {
+//         text: "Nanti aku kirim daftarnya ya.",
+//         time: "2:30 PM",
+//         date: "2025-03-31",
+//       },
+//     ],
+//   },
+//   {
+//     name: "Emma",
+//     lastMessage: "Aku support selalu!",
+//     time: "5:30 PM",
+//     img: "/users/emma.jpg",
+//     city: "Semarang",
+//     lastActive: "1 April",
+//     reviewCount: 95,
+//     messages: [
+//       {
+//         text: "Lihat perkembangan aplikasi ini keren banget.",
+//         time: "5:00 PM",
+//         date: "2025-04-01",
+//       },
+//       { text: "Aku support selalu!", 
+//         time: "5:30 PM", 
+//         date: "2025-04-01" 
+//       },
+//     ],
+//   },
+//   {
+//     name: "Daniel",
+//     lastMessage: "Kalau mau, kita bisa buat komunitas kecil.",
+//     time: "6:45 PM",
+//     img: "/users/daniel.jpg",
+//     city: "Bali",
+//     lastActive: "30 Maret",
+//     reviewCount: 110,
+//     messages: [
+//       {
+//         text: "Aku ingin berbagi pengalaman tentang aksesibilitas.",
+//         time: "6:00 PM",
+//         date: "2025-03-30",
+//       },
+//       {
+//         text: "Kalau mau, kita bisa buat komunitas kecil.",
+//         time: "6:45 PM",
+//         date: "2025-03-30",
+//       },
+//     ],
+//   },
+// ];
 
 const ChatPage = () => {
   const [activeTab, setActiveTab] = useState("cari");

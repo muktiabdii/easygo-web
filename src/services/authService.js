@@ -1,68 +1,58 @@
 import axios from 'axios';
 
-// inisiasi API URL
-const Login_API_URL = 'http://localhost:8000/api/auth/login'; 
-const Register_API_URL = 'http://localhost:8000/api/auth/register';
-const ForgotPassword_API_URL = 'http://localhost:8000/api/auth/password/forgot';
-const validateOTP_API_URL = 'http://localhost:8000/api/auth/password/validate-otp';
-const ResetPassword_API_URL = 'http://localhost:8000/api/auth/password/reset';
+const BASE_URL = 'http://localhost:8000/api/auth';
 
 // fungsi untuk login
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(Login_API_URL, { email, password });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
+    const response = await axios.post(`${BASE_URL}/login`, { email, password });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };
 
 // fungsi untuk register
 export const register = async (data) => {
   try {
-    const response = await axios.post(Register_API_URL, data);
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
+    const response = await axios.post(`${BASE_URL}/register`, data);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };
 
 // fungsi untuk mengirim email untuk reset password
 export const forgotPassword = async (email) => {
   try {
-    const response = await axios.post(ForgotPassword_API_URL, { email });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
+    const response = await axios.post(`${BASE_URL}/password/forgot`, { email });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };
 
 // fungsi untuk validasi OTP
 export const validateOTP = async (email, otp) => {
   try {
-    const response = await axios.post(validateOTP_API_URL, { email, otp });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
+    const response = await axios.post(`${BASE_URL}/password/validate-otp`, { email, otp });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };
 
 // fungsi untuk reset password
 export const resetPassword = async (email, otp, password, password_confirmation) => {
   try {
-    const response = await axios.post(ResetPassword_API_URL, { email, otp, password, password_confirmation });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
+    const response = await axios.post(`${BASE_URL}/password/reset`, {
+      email,
+      otp,
+      password,
+      password_confirmation,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };
