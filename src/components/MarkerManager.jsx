@@ -1,21 +1,22 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useMap, useMapEvents } from "react-leaflet";
-import { useNavigate } from "react-router-dom";
-import L from "leaflet";
-import "../MarkerStyles.css";
-import Popup from "./Popup";
-import PreviewMarker from "./PreviewMarker";
-import PlaceMarkers from "./PlaceMarker";
-import useFilteredPlaces from "../hooks/useFilteredPlaces";
-import useCustomMarkers from "../hooks/useCustomMarkers";
-import { isAuthenticated } from "../utils/authUtils";
-import AuthDialog from "./AuthDialog"; 
+import React, { useState, useRef, useEffect } from 'react';
+import { useMap, useMapEvents } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
+import L from 'leaflet';
+import '../MarkerStyles.css';
+import Popup from './Popup';
+import PreviewMarker from './PreviewMarker';
+import PlaceMarkers from './PlaceMarker';
+import useFilteredPlaces from '../hooks/useFilteredPlaces';
+import useCustomMarkers from '../hooks/useCustomMarkers';
+import { isAuthenticated } from '../utils/authUtils';
+import AuthDialog from './AuthDialog';
 
 const MarkerManager = ({
   places,
-  searchQuery = "",
+  searchQuery = '',
   activeFilters = [],
   isSearchActive = false,
+  onDestinationSelect, // New prop for selecting destination
 }) => {
   const [previewPosition, setPreviewPosition] = useState(null);
   const [popupPosition, setPopupPosition] = useState(null);
@@ -28,7 +29,6 @@ const MarkerManager = ({
   const map = useMap();
   const navigate = useNavigate();
 
-  // Custom hooks
   const { filteredPlaces } = useFilteredPlaces(
     places,
     searchQuery,
@@ -50,6 +50,9 @@ const MarkerManager = ({
 
     flyToLocation(latlng);
     openPopup(latlng, place);
+    if (onDestinationSelect) {
+      onDestinationSelect({ lat: place.latitude, lng: place.longitude });
+    }
   }
 
   const flyToLocation = (latlng) => {
@@ -74,7 +77,6 @@ const MarkerManager = ({
     setPreviewPosition(place ? null : latlng);
   };
 
-  // Map click events
   useMapEvents({
     click(e) {
       if (isPopupOpen) return;
@@ -94,9 +96,9 @@ const MarkerManager = ({
 
     if (isAuthenticated()) {
       if (previewPosition) {
-        navigate("/tambah-tempat", { state: { position: previewPosition } });
+        navigate('/tambah-tempat', { state: { position: previewPosition } });
       } else {
-        navigate("/tambah-tempat");
+        navigate('/tambah-tempat');
       }
     } else {
       setShowAuthDialog(true);
@@ -125,23 +127,19 @@ const MarkerManager = ({
   const handleViewDetail = (e) => {
     e.stopPropagation();
     if (selectedPlace) {
-      navigate("/place-detail", { state: { placeName: selectedPlace.name } });
+      navigate('/place-detail', { state: { placeName: selectedPlace.name } });
     }
   };
 
-  // Handler untuk tombol "Masuk" pada dialog
   const handleLogin = () => {
     setShowAuthDialog(false);
-    navigate("/login");
+    navigate('/login');
   };
 
-  // Handler untuk tombol "Batal" pada dialog
   const handleCancelAuth = () => {
     setShowAuthDialog(false);
-    // Tidak perlu navigasi, tetap di halaman yang sama
   };
 
-  // perbarui posisi popup saat zoom atau move
   useEffect(() => {
     if (!popupPosition) return;
 
@@ -156,12 +154,12 @@ const MarkerManager = ({
       }));
     };
 
-    map.on("zoom", updatePopupPosition);
-    map.on("move", updatePopupPosition);
+    map.on('zoom', updatePopupPosition);
+    map.on('move', updatePopupPosition);
 
     return () => {
-      map.off("zoom", updatePopupPosition);
-      map.off("move", updatePopupPosition);
+      map.off('zoom', updatePopupPosition);
+      map.off('move', updatePopupPosition);
     };
   }, [map, popupPosition]);
 
@@ -195,15 +193,13 @@ const MarkerManager = ({
       )}
 
       {showAuthDialog && (
-        <>
-          <div className="fixed inset-0 z-[1001]">
-            <AuthDialog
-              ref={authDialogRef}
-              onLogin={handleLogin}
-              onCancel={handleCancelAuth}
-            />
-          </div>
-        </>
+        <div className="fixed inset-0 z-[1001]">
+          <AuthDialog
+            ref={authDialogRef}
+            onLogin={handleLogin}
+            onCancel={handleCancelAuth}
+          />
+        </div>
       )}
     </>
   );

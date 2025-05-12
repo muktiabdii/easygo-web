@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import useSpeechRecognition from '../hooks/useSpeechRecognition'; 
+import useSpeechRecognition from '../hooks/useSpeechRecognition';
 import { useNavigate } from 'react-router-dom';
-import AuthDialog from './AuthDialog'; // Import AuthDialog
-import { isAuthenticated } from '../utils/authUtils'; // Import isAuthenticated function
+import AuthDialog from './AuthDialog';
+import RoutePopup from './RoutePopup';
+import { isAuthenticated } from '../utils/authUtils';
+import axios from 'axios';
 
 const filterOptions = [
   { label: "Lift Braille & Suara", icon: "/icons/lift.png" },
@@ -15,23 +17,22 @@ const filterOptions = [
   { label: "Menu Braille", icon: "/icons/menu-braille.png" },
 ];
 
-const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground }) => {
+const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground, routeDistance, onRouteSubmit, onClearRoute, currentLocation, places }) => {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [searchValue, setSearchValue] = useState('');
-  const [showAuthDialog, setShowAuthDialog] = useState(false); // State for showing auth dialog
-  const [redirectPath, setRedirectPath] = useState(""); // State for redirect path
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('');
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [showRoutePopup, setShowRoutePopup] = useState(false);
 
-  // speech recognition hook
+  // Speech recognition hook
   const { isListening, toggleSpeechRecognition, searchInputRef, transcript } = useSpeechRecognition((e) => {
     setSearchValue(e.target.value);
     if (onSearchChange) {
       onSearchChange(e);
-    }
-    // Auto-submit using speech recognition
-    if (onSearchSubmit && e.target.value.trim() !== '') {
-      onSearchSubmit();
     }
   });
 
@@ -40,6 +41,42 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
       onFilterChange(selectedFilters);
     }
   }, [selectedFilters, onFilterChange]);
+
+  // Fetch user profile image if user is authenticated
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        setIsImageLoading(true);
+        const token = localStorage.getItem('auth_header');
+        if (!token) {
+          setIsImageLoading(false);
+          return;
+        }
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        };
+
+        const response = await axios.get('http://localhost:8000/api/auth/validate-token', config);
+        if (response.data && response.data.user && response.data.user.profile_image) {
+          setProfileImageUrl(response.data.user.profile_image);
+        }
+        setIsImageLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch profile image:', error);
+        setIsImageLoading(false);
+      }
+    };
+
+    if (isAuthenticated()) {
+      fetchProfileImage();
+    } else {
+      setIsImageLoading(false);
+    }
+  }, []);
 
   const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
 
@@ -53,9 +90,9 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
-    setSearchValue(value); 
+    setSearchValue(value);
     if (onSearchChange) {
-      onSearchChange(e); 
+      onSearchChange(e);
     }
   };
 
@@ -73,26 +110,55 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
     }
   };
 
-  // Handler for profile click
+  const handleRouteClick = () => {
+    setShowRoutePopup(true);
+  };
+
+  const handleRouteApply = (startCoords, destCoords) => {
+    setShowRoutePopup(false);
+    onRouteSubmit(startCoords, destCoords);
+  };
+
+  const handleRouteCancel = () => {
+    setShowRoutePopup(false);
+  };
+
+  const handleClearRoute = () => {
+    if (onClearRoute) {
+      onClearRoute();
+    }
+    setSearchValue('');
+  };
+
   const handleProfileClick = () => {
     if (isAuthenticated()) {
-      navigate('/profile'); // Navigate to profile if authenticated
+      navigate('/profile');
     } else {
-      setRedirectPath('/profile'); // Set redirect path
-      setShowAuthDialog(true); // Show auth dialog
+      setRedirectPath('/profile');
+      setShowAuthDialog(true);
     }
   };
 
-  // Handler for login action
   const handleLogin = () => {
     setShowAuthDialog(false);
-    navigate("/login", { state: { from: redirectPath } });
+    navigate('/login', { state: { from: redirectPath } });
   };
 
-  // Handler for cancel action
   const handleCancelAuth = () => {
     setShowAuthDialog(false);
   };
+
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = '/icons/user.png';
+    setIsImageLoading(false);
+  };
+
+  const imageSrc = profileImageUrl;
 
   return (
     <>
@@ -104,7 +170,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
       )}
 
       <div
- className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
+        className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
           isFilterOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -147,57 +213,118 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
 
           <img src="/logo.png" alt="EasyGo Logo" className="h-10" />
 
-          <div className="relative ml-4 w-100">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Cari fasilitas aksesibilitas.."
-              className="w-full pl-4 pr-20 py-2 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
-              value={searchValue} 
-              onChange={handleSearchChange}
-              onKeyDown={handleKeyDown}
-            />
-            <img
-              src="/icons/search.png"
-              alt="Search"
-              className="absolute right-10 top-2.5 h-5 w-5 text-gray-500 cursor-pointer"
-              onClick={handleSearchClick}
-            />
-            <button 
-              onClick={toggleSpeechRecognition}
-              className="absolute right-3 top-2.5 h-5 w-5 flex items-center justify-center cursor-pointer"
-            >
-              <img
-                src="/icons/mic.png"
-                alt="Mic"
-                className={`h-5 w-5 ${isListening ? 'opacity-100 animate-pulse' : 'opacity-100'}`}
-                style={{
-                  animationDuration: isListening ? '0.6s' : '0s',
-                  animationTimingFunction: 'ease-in-out'
-                }}
+          <div className="relative ml-4 w-full sm:w-100">
+            <div className="relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Cari fasilitas atau tujuan.."
+                className="w-full pl-4 pr-28 py-2 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                value={searchValue}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
               />
-            </button>
+              <button
+                onClick={handleRouteClick}
+                className="absolute right-20 top-2 h-6 w-6 cursor-pointer"
+              >
+                <img
+                  src="/icons/route_ic.png"
+                  alt="Route"
+                  className="h-6 w-6"
+                />
+              </button>
+              <img
+                src="/icons/search.png"
+                alt="Search"
+                className="absolute right-12 top-2.5 h-5 w-5 text-gray-500 cursor-pointer"
+                onClick={handleSearchClick}
+              />
+              <button
+                onClick={toggleSpeechRecognition}
+                className="absolute right-4 top-2.5 h-5 w-5 flex items-center justify-center cursor-pointer"
+              >
+                <img
+                  src="/icons/mic.png"
+                  alt="Mic"
+                  className={`h-5 w-5 ${isListening ? 'opacity-100 animate-pulse' : 'opacity-100'}`}
+                  style={{
+                    animationDuration: isListening ? '0.6s' : '0s',
+                    animationTimingFunction: 'ease-in-out',
+                  }}
+                />
+              </button>
+            </div>
+            {routeDistance && (
+              <div className="absolute left-0 top-12 bg-white p-4 rounded-3xl shadow-md w-full z-[1001] flex items-center justify-between text-sm text-black">
+                <span>Jarak: {routeDistance} km</span>
+                <button
+                  onClick={handleClearRoute}
+                  className="text-white text-xs bg-[#3C91E6] rounded-2xl p-2 hover:bg-blue-500 cursor-pointer"
+                >
+                  Hapus Rute
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex items-center space-x-6">
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Tentang</button>
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Pedoman</button>
-          <img src="/icons/user.png" alt="User " className="h-10 w-10 object-contain cursor-pointer" onClick={() => navigate('/profile')}/>
+
+          <div className="h-10 w-10 rounded-full overflow-hidden cursor-pointer relative" onClick={handleProfileClick}>
+            {isImageLoading && (
+              <div className="absolute w-10 h-10 flex items-center justify-center bg-white rounded-full">
+                <svg
+                  className="animate-spin h-6 w-6 text-[#3C91E6]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+            )}
+            <img
+              src={imageSrc}
+              alt="User Profile"
+              className="h-full w-full object-cover"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </div>
         </div>
       </nav>
 
-      {/* Render dialog autentikasi jika showAuthDialog true */}
       {showAuthDialog && (
         <div className="fixed inset-0 z-[1001]">
-          <AuthDialog 
-            onLogin={handleLogin} 
-            onCancel={handleCancelAuth} 
-          />
+          <AuthDialog onLogin={handleLogin} onCancel={handleCancelAuth} />
         </div>
+      )}
+
+      {showRoutePopup && (
+        <RoutePopup
+          onApply={handleRouteApply}
+          onCancel={handleRouteCancel}
+          currentLocation={currentLocation}
+          places={places}
+        />
       )}
     </>
   );
-}
+};
 
 export default Navbar;
