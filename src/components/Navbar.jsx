@@ -25,8 +25,9 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [redirectPath, setRedirectPath] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState(null);
-  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const [showRoutePopup, setShowRoutePopup] = useState(false);
+  const [profileImgError, setProfileImgError] = useState(false);
 
   // Speech recognition hook
   const { isListening, toggleSpeechRecognition, searchInputRef, transcript } = useSpeechRecognition((e) => {
@@ -45,6 +46,11 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   // Fetch user profile image if user is authenticated
   useEffect(() => {
     const fetchProfileImage = async () => {
+      if (!isAuthenticated()) {
+        setIsImageLoading(false);
+        return;
+      }
+      
       try {
         setIsImageLoading(true);
         const token = localStorage.getItem('auth_header');
@@ -63,20 +69,33 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         const response = await axios.get('http://localhost:8000/api/auth/validate-token', config);
         if (response.data && response.data.user && response.data.user.profile_image) {
           setProfileImageUrl(response.data.user.profile_image);
+        } else {
+          setIsImageLoading(false);
         }
-        setIsImageLoading(false);
       } catch (error) {
         console.error('Failed to fetch profile image:', error);
         setIsImageLoading(false);
       }
     };
 
-    if (isAuthenticated()) {
-      fetchProfileImage();
-    } else {
-      setIsImageLoading(false);
-    }
+    fetchProfileImage();
   }, []);
+
+  useEffect(() => {
+    if (profileImageUrl) {
+      const img = new Image();
+      img.src = profileImageUrl;
+      
+      img.onload = () => {
+        setIsImageLoading(false);
+      };
+      
+      img.onerror = () => {
+        setProfileImgError(true);
+        setIsImageLoading(false);
+      };
+    }
+  }, [profileImageUrl]);
 
   const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
 
@@ -148,17 +167,12 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
     setShowAuthDialog(false);
   };
 
-  const handleImageLoad = () => {
+  const handleImageError = () => {
+    setProfileImgError(true);
     setIsImageLoading(false);
   };
 
-  const handleImageError = (e) => {
-    e.target.onerror = null;
-    e.target.src = '/icons/user.png';
-    setIsImageLoading(false);
-  };
-
-  const imageSrc = profileImageUrl;
+  const imageSrc = profileImgError || !profileImageUrl ? '/icons/user.png' : profileImageUrl;
 
   return (
     <>
@@ -274,8 +288,8 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Pedoman</button>
 
           <div className="h-10 w-10 rounded-full overflow-hidden cursor-pointer relative" onClick={handleProfileClick}>
-            {isImageLoading && (
-              <div className="absolute w-10 h-10 flex items-center justify-center bg-white rounded-full">
+            {isImageLoading ? (
+              <div className="absolute inset-0 w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full">
                 <svg
                   className="animate-spin h-6 w-6 text-[#3C91E6]"
                   xmlns="http://www.w3.org/2000/svg"
@@ -297,14 +311,14 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
                   ></path>
                 </svg>
               </div>
+            ) : (
+              <img
+                src={imageSrc}
+                alt="User Profile"
+                className="h-full w-full object-cover"
+                onError={handleImageError}
+              />
             )}
-            <img
-              src={imageSrc}
-              alt="User Profile"
-              className="h-full w-full object-cover"
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
           </div>
         </div>
       </nav>
