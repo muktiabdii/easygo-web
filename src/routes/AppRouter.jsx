@@ -13,6 +13,7 @@ import AddPlace from "../pages/AddPlace";
 import AddReview from "../pages/AddReview";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
+import AboutPage from "../pages/AboutPage";
 import PrivateRoute from "../components/PrivateRoute";
 import { checkTokenValidity } from "../utils/authUtils";
 import { RegistrationProvider } from "../contexts/RegistrationContext";
@@ -88,6 +89,7 @@ export default function AppRouter() {
               }
             />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </AnimatePresence>
       </BrowserRouter>
