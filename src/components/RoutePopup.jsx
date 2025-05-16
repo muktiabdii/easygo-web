@@ -10,6 +10,7 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
   const [locationWarning, setLocationWarning] = useState(null);
   const [isOpen, setIsOpen] = useState(true);
 
+  // Update Start field when "Use my location now" is toggled
   useEffect(() => {
     if (useCurrentLocation && currentLocation) {
       setStart('Lokasi Sekarang');
@@ -154,20 +155,22 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
     }
 
     setIsOpen(false);
+    // Wait for exit animation to complete before calling onApply
     setTimeout(() => {
       onApply(startCoords, destCoords);
-    }, 300); 
+    }, 300); // Match exit animation duration
   };
 
   // Handle Cancel button
   const handleCancel = () => {
     setIsOpen(false);
+    // Wait for exit animation to complete before calling onCancel
     setTimeout(() => {
       onCancel();
-    }, 300);
+    }, 300); // Match exit animation duration
   };
 
-  // Animation for the backdrop
+  // Animation variants for the backdrop
   const backdropVariants = {
     hidden: { opacity: 0, backdropFilter: 'blur(0px)' },
     visible: { 
@@ -235,19 +238,13 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
             {/* Location Warning Toast */}
             {locationWarning && (
               <motion.div
-                className="fixed top-16 left-1/2 transform -translate-x-1/2 z-[1005] bg-red-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center"
+                className="fixed top-16 left-1/2 transform -translate-x-1/2 z-[1005] bg-red-500 text-white px-4 py-2 rounded-lg shadow-md"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <span>Aktifkan lokasi anda dulu dengan tombol</span>
-                <img 
-                  src="/icons/synclocation.png" 
-                  alt="Location Icon" 
-                  className="h-5 w-5 mx-2 inline-block"
-                />
-                <span>di pojok dashboard</span>
+                {locationWarning}
               </motion.div>
             )}
 

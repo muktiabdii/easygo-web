@@ -30,7 +30,7 @@ const Dashboard = () => {
     const fetchPlaces = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:8000/api/places');
+        const response = await fetch('http://127.0.0.1:8000/api/places');
         if (response.ok) {
           const fetchedPlaces = await response.json();
           setPlaces(fetchedPlaces);

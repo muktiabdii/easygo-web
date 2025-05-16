@@ -167,7 +167,7 @@ const AddPlace = () => {
         formDataObj.append("images[]", foto);
       });
 
-      const response = await axios.post("http://localhost:8000/api/places", formDataObj, {
+      const response = await axios.post("http://127.0.0.1:8000/api/places", formDataObj, {
         headers: {
           Accept: "application/json",
           "Content-Type": "multipart/form-data",

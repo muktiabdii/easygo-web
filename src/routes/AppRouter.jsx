@@ -13,9 +13,6 @@ import AddPlace from "../pages/AddPlace";
 import AddReview from "../pages/AddReview";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
-import Pedoman from "../pages/Pedoman";
-import AllReview from "../pages/AllReview";
-import AboutPage from "../pages/AboutPage";
 import PrivateRoute from "../components/PrivateRoute";
 import { checkTokenValidity } from "../utils/authUtils";
 import { RegistrationProvider } from "../contexts/RegistrationContext";
@@ -66,14 +63,6 @@ export default function AppRouter() {
               path="/place-detail"
               element={withAnimatedPage(<PlaceDetail />)}
             />
-            <Route 
-              path="/pedoman" 
-              element={<Pedoman />} 
-            />
-            <Route 
-              path="/reviews" 
-              element={<AllReview />} 
-            />
             <Route
               path="/profile"
               element={
@@ -99,7 +88,6 @@ export default function AppRouter() {
               }
             />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </AnimatePresence>
       </BrowserRouter>
