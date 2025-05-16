@@ -13,7 +13,6 @@ import AddPlace from "../pages/AddPlace";
 import AddReview from "../pages/AddReview";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
-import ProfileEdit from "../pages/ProfileEdit";
 import Pedoman from "../pages/Pedoman";
 import AllReview from "../pages/AllReview";
 import AboutPage from "../pages/AboutPage";

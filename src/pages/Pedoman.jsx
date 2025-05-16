@@ -33,7 +33,7 @@ const Pedoman = () => {
     <div>
         <NavbarBack title="Pedoman" showAvatar={true} />
     <div className="min-h-screen bg-white flex flex-col items-center py-12 px-4">
-      <h2 className="text-4xl font-bold text-[#3C91E6] mb-8">Daftar Pedoman</h2>
+      <h2 className="text-4xl font-bold text-[#3C91E6] mt-18 mb-8">Daftar Pedoman</h2>
 
       <div className="bg-[#EFF0F7] w-full max-w-3xl  pt-4 px-4 sm:px-8 py-10 shadow">
         {daftarPedoman.map((item, index) => (
