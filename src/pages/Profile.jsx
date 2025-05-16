@@ -40,7 +40,7 @@ const Profile = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
-  const [profileImageUrl, setProfileImageUrl] = useState("/users/profile-picture.jpg");
+  const [profileImageUrl, setProfileImageUrl] = useState("/users/profile-picture.png");
   const [formData, setFormData] = useState({
     username: "",
     phone: "",
