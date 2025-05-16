@@ -25,9 +25,8 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [redirectPath, setRedirectPath] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState(null);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const [showRoutePopup, setShowRoutePopup] = useState(false);
-  const [profileImgError, setProfileImgError] = useState(false);
 
   // Speech recognition hook
   const { isListening, toggleSpeechRecognition, searchInputRef, transcript } = useSpeechRecognition((e) => {
@@ -46,11 +45,6 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   // Fetch user profile image if user is authenticated
   useEffect(() => {
     const fetchProfileImage = async () => {
-      if (!isAuthenticated()) {
-        setIsImageLoading(false);
-        return;
-      }
-      
       try {
         setIsImageLoading(true);
         const token = localStorage.getItem('auth_header');
@@ -69,33 +63,20 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         const response = await axios.get('http://localhost:8000/api/auth/validate-token', config);
         if (response.data && response.data.user && response.data.user.profile_image) {
           setProfileImageUrl(response.data.user.profile_image);
-        } else {
-          setIsImageLoading(false);
         }
+        setIsImageLoading(false);
       } catch (error) {
         console.error('Failed to fetch profile image:', error);
         setIsImageLoading(false);
       }
     };
 
-    fetchProfileImage();
-  }, []);
-
-  useEffect(() => {
-    if (profileImageUrl) {
-      const img = new Image();
-      img.src = profileImageUrl;
-      
-      img.onload = () => {
-        setIsImageLoading(false);
-      };
-      
-      img.onerror = () => {
-        setProfileImgError(true);
-        setIsImageLoading(false);
-      };
+    if (isAuthenticated()) {
+      fetchProfileImage();
+    } else {
+      setIsImageLoading(false);
     }
-  }, [profileImageUrl]);
+  }, []);
 
   const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
 
@@ -116,7 +97,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && searchValue.trim() !== "") {
+    if (e.key === 'Enter' && searchValue.trim() !== '') {
       if (onSearchSubmit) {
         onSearchSubmit();
       }
@@ -124,7 +105,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   };
 
   const handleSearchClick = () => {
-    if (onSearchSubmit && searchValue.trim() !== "") {
+    if (onSearchSubmit && searchValue.trim() !== '') {
       onSearchSubmit();
     }
   };
@@ -167,12 +148,17 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
     setShowAuthDialog(false);
   };
 
-  const handleImageError = () => {
-    setProfileImgError(true);
+  const handleImageLoad = () => {
     setIsImageLoading(false);
   };
 
-  const imageSrc = profileImgError || !profileImageUrl ? '/icons/user.png' : profileImageUrl;
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = '/icons/user.png';
+    setIsImageLoading(false);
+  };
+
+  const imageSrc = profileImageUrl;
 
   return (
     <>
@@ -185,16 +171,12 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
 
       <div
         className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
-          isFilterOpen ? "translate-x-0" : "-translate-x-full"
+          isFilterOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="p-4">
           <div className="flex items-center mb-4">
-            <img
-              src="/icons/filter.png"
-              alt="Filter"
-              className="h-6 w-6 mr-2"
-            />
+            <img src="/icons/filter.png" alt="Filter" className="h-6 w-6 mr-2" />
             <span className="font-semibold text-lg">Filter Aksesibilitas</span>
           </div>
 
@@ -205,9 +187,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
                 className="flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-[#357FCC] transition-colors duration-200"
               >
                 <div className="flex items-center space-x-3">
-
                   <img src={filter.icon} alt={filter.label} className="h-6 w-6" />
-
                   <span className="text-sm">{filter.label}</span>
                 </div>
                 <input
@@ -221,11 +201,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         </div>
       </div>
 
-      <nav
-        className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${
-          hideBackground ? "bg-transparent" : "bg-[#EFF0F7] text-white"
-        }`}
-      >
+      <nav className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${hideBackground ? 'bg-transparent' : 'bg-[#EFF0F7] text-white'}`}>
         <div className="flex items-center space-x-4">
           <button onClick={toggleFilter}>
             <img
@@ -298,8 +274,8 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
           <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Pedoman</button>
 
           <div className="h-10 w-10 rounded-full overflow-hidden cursor-pointer relative" onClick={handleProfileClick}>
-            {isImageLoading ? (
-              <div className="absolute inset-0 w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full">
+            {isImageLoading && (
+              <div className="absolute w-10 h-10 flex items-center justify-center bg-white rounded-full">
                 <svg
                   className="animate-spin h-6 w-6 text-[#3C91E6]"
                   xmlns="http://www.w3.org/2000/svg"
@@ -321,14 +297,14 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
                   ></path>
                 </svg>
               </div>
-            ) : (
-              <img
-                src={imageSrc}
-                alt="User Profile"
-                className="h-full w-full object-cover"
-                onError={handleImageError}
-              />
             )}
+            <img
+              src={imageSrc}
+              alt="User Profile"
+              className="h-full w-full object-cover"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
           </div>
         </div>
       </nav>

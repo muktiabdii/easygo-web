@@ -61,7 +61,7 @@ const NavbarBack = ({ title = "Profile", showAvatar = true, avatarSrc }) => {
     navigate(-1);
   };
 
-  const imageSrc = avatarSrc || profileImageUrl || "/icons/user.png";
+  const imageSrc = avatarSrc || profileImageUrl;
 
   // Handle image load success
   const handleImageLoad = () => {
@@ -71,7 +71,7 @@ const NavbarBack = ({ title = "Profile", showAvatar = true, avatarSrc }) => {
   // Handle image load error
   const handleImageError = (e) => {
     e.target.onerror = null;
-    e.target.src = "/icons/user.png";
+    e.target.src = "icons/user.png";
     setIsImageLoading(false);
   };
 
