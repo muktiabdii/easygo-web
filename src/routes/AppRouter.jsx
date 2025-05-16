@@ -16,6 +16,8 @@ import PrivateRoute from '../components/PrivateRoute';
 import { checkTokenValidity } from '../utils/authUtils';
 import { RegistrationProvider } from '../contexts/RegistrationContext';
 import ProfileEdit from "../pages/ProfileEdit";
+import Pedoman from "../pages/Pedoman";
+import AllReview from "../pages/AllReview";
 
 export default function AppRouter() {
   useEffect(() => {
@@ -36,6 +38,8 @@ export default function AppRouter() {
           <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/place-detail" element={<PlaceDetail />} />
+          <Route path="/pedoman" element={<Pedoman />} />
+          <Route path="/reviews" element={<AllReview />} />
           <Route 
             path="/profile" 
             element={
