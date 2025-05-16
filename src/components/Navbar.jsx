@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import useSpeechRecognition from '../hooks/useSpeechRecognition'; 
+import React, { useState, useEffect } from "react";
+import useSpeechRecognition from "../hooks/useSpeechRecognition";
+import { Link } from "react-router-dom";
 
 const filterOptions = [
   { label: "Lift Braille & Suara", icon: "/icons/lift.png" },
@@ -12,22 +13,28 @@ const filterOptions = [
   { label: "Menu Braille", icon: "/icons/menu-braille.png" },
 ];
 
-const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground }) => {
+const Navbar = ({
+  onSearchChange,
+  onSearchSubmit,
+  onFilterChange,
+  hideBackground,
+}) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState("");
 
   // speech recognition hook
-  const { isListening, toggleSpeechRecognition, searchInputRef, transcript } = useSpeechRecognition((e) => {
-    setSearchValue(e.target.value);
-    if (onSearchChange) {
-      onSearchChange(e);
-    }
-    // Auto-submit using speech recognition
-    if (onSearchSubmit && e.target.value.trim() !== '') {
-      onSearchSubmit();
-    }
-  });
+  const { isListening, toggleSpeechRecognition, searchInputRef, transcript } =
+    useSpeechRecognition((e) => {
+      setSearchValue(e.target.value);
+      if (onSearchChange) {
+        onSearchChange(e);
+      }
+      // Auto-submit using speech recognition
+      if (onSearchSubmit && e.target.value.trim() !== "") {
+        onSearchSubmit();
+      }
+    });
 
   useEffect(() => {
     if (onFilterChange) {
@@ -47,14 +54,14 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
-    setSearchValue(value); 
+    setSearchValue(value);
     if (onSearchChange) {
-      onSearchChange(e); 
+      onSearchChange(e);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && searchValue.trim() !== '') {
+    if (e.key === "Enter" && searchValue.trim() !== "") {
       if (onSearchSubmit) {
         onSearchSubmit();
       }
@@ -62,7 +69,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   };
 
   const handleSearchClick = () => {
-    if (onSearchSubmit && searchValue.trim() !== '') {
+    if (onSearchSubmit && searchValue.trim() !== "") {
       onSearchSubmit();
     }
   };
@@ -78,12 +85,16 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
 
       <div
         className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
-          isFilterOpen ? 'translate-x-0' : '-translate-x-full'
+          isFilterOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4">
           <div className="flex items-center mb-4">
-            <img src="/icons/filter.png" alt="Filter" className="h-6 w-6 mr-2" />
+            <img
+              src="/icons/filter.png"
+              alt="Filter"
+              className="h-6 w-6 mr-2"
+            />
             <span className="font-semibold text-lg">Filter Aksesibilitas</span>
           </div>
 
@@ -94,7 +105,11 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
                 className="flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-[#357FCC] transition-colors duration-200"
               >
                 <div className="flex items-center space-x-3">
-                  <img src={filter.icon} alt={filter.label} className="h- 6 w-6" />
+                  <img
+                    src={filter.icon}
+                    alt={filter.label}
+                    className="h- 6 w-6"
+                  />
                   <span className="text-sm">{filter.label}</span>
                 </div>
                 <input
@@ -108,7 +123,11 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         </div>
       </div>
 
-      <nav className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${hideBackground ? 'bg-transparent' : 'bg-[#EFF0F7] text-white'}`}>
+      <nav
+        className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${
+          hideBackground ? "bg-transparent" : "bg-[#EFF0F7] text-white"
+        }`}
+      >
         <div className="flex items-center space-x-4">
           <button onClick={toggleFilter}>
             <img
@@ -126,7 +145,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
               type="text"
               placeholder="Cari fasilitas aksesibilitas.."
               className="w-full pl-4 pr-20 py-2 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
-              value={searchValue} 
+              value={searchValue}
               onChange={handleSearchChange}
               onKeyDown={handleKeyDown}
             />
@@ -136,17 +155,19 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
               className="absolute right-10 top-2.5 h-5 w-5 text-gray-500 cursor-pointer"
               onClick={handleSearchClick}
             />
-            <button 
+            <button
               onClick={toggleSpeechRecognition}
               className="absolute right-3 top-2.5 h-5 w-5 flex items-center justify-center cursor-pointer"
             >
               <img
                 src="/icons/mic.png"
                 alt="Mic"
-                className={`h-5 w-5 ${isListening ? 'opacity-100 animate-pulse' : 'opacity-100'}`}
+                className={`h-5 w-5 ${
+                  isListening ? "opacity-100 animate-pulse" : "opacity-100"
+                }`}
                 style={{
-                  animationDuration: isListening ? '0.6s' : '0s',
-                  animationTimingFunction: 'ease-in-out'
+                  animationDuration: isListening ? "0.6s" : "0s",
+                  animationTimingFunction: "ease-in-out",
                 }}
               />
             </button>
@@ -154,13 +175,25 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         </div>
 
         <div className="flex items-center space-x-6">
-          <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Tentang</button>
-          <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">Pedoman</button>
-          <img src="/icons/user.png" alt="User " className="h-10 w-10 object-contain" />
+          <Link to="/about">
+            <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">
+              Tentang
+            </button>
+          </Link>
+          <Link to="/pedoman">
+            <button className="text-white bg-[#3C91E6] px-8 py-2 rounded-full text-sm">
+              Pedoman
+            </button>
+          </Link>
+          <img
+            src="/icons/user.png"
+            alt="User"
+            className="h-10 w-10 object-contain"
+          />
         </div>
       </nav>
     </>
   );
-}
+};
 
 export default Navbar;
