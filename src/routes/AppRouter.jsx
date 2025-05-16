@@ -1,19 +1,27 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import Login from "../pages/LoginPage";
 import RegisterStepOne from "../pages/RegisterStepOne";
 import RegisterStepTwo from "../pages/RegisterStepTwo";
-import ForgotPasswordStepOne from '../pages/ForgotPasswordStepOne'
-import ForgotPasswordStepTwo from '../pages/ForgotPasswordStepTwo'
-import ForgotPasswordStepThree from '../pages/ForgotPasswordStepThree';
-import Dashboard from '../pages/Dashboard'
-import ChatPage from '../pages/ChatPage'
+import ForgotPasswordStepOne from "../pages/ForgotPasswordStepOne";
+import ForgotPasswordStepTwo from "../pages/ForgotPasswordStepTwo";
+import ForgotPasswordStepThree from "../pages/ForgotPasswordStepThree";
+import Dashboard from "../pages/Dashboard";
+import ChatPage from "../pages/ChatPage";
 import AddPlace from "../pages/AddPlace";
+import AddReview from "../pages/AddReview";
 import Profile from "../pages/Profile";
 import PlaceDetail from "../pages/PlaceDetail";
-import PrivateRoute from '../components/PrivateRoute';
-import { checkTokenValidity } from '../utils/authUtils';
-import { RegistrationProvider } from '../contexts/RegistrationContext';
+import PrivateRoute from "../components/PrivateRoute";
+import { checkTokenValidity } from "../utils/authUtils";
+import { RegistrationProvider } from "../contexts/RegistrationContext";
+import AnimatedPage from "../components/AnimatedPage"; // Sesuaikan path
+
+// Fungsi untuk membungkus elemen dengan AnimatedPage
+const withAnimatedPage = (element) => {
+  return <AnimatedPage>{element}</AnimatedPage>;
+};
 
 export default function AppRouter() {
   useEffect(() => {
@@ -23,45 +31,65 @@ export default function AppRouter() {
   return (
     <RegistrationProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register-step-one" element={<RegisterStepOne />} />
-          <Route path="/register-step-two" element={<RegisterStepTwo />} />
-          <Route path="/forgot-password-step-one" element={<ForgotPasswordStepOne />} />
-          <Route path="/forgot-password-step-two" element={<ForgotPasswordStepTwo />} />
-          <Route path="/forgot-password-step-three" element={<ForgotPasswordStepThree />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/place-detail" element={<PlaceDetail />} />
-          {/* Protected routes */}
-          <Route 
-            path="/tambah-tempat" 
-            element={
-              <PrivateRoute>
-                <AddPlace />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/chat" 
-            element={
-              <PrivateRoute>
-                <ChatPage />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            } 
-          />
-          
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={withAnimatedPage(<Dashboard />)} />
+            <Route path="/login" element={withAnimatedPage(<Login />)} />
+            <Route
+              path="/register-step-one"
+              element={withAnimatedPage(<RegisterStepOne />)}
+            />
+            <Route
+              path="/register-step-two"
+              element={withAnimatedPage(<RegisterStepTwo />)}
+            />
+            <Route
+              path="/forgot-password-step-one"
+              element={withAnimatedPage(<ForgotPasswordStepOne />)}
+            />
+            <Route
+              path="/forgot-password-step-two"
+              element={withAnimatedPage(<ForgotPasswordStepTwo />)}
+            />
+            <Route
+              path="/forgot-password-step-three"
+              element={withAnimatedPage(<ForgotPasswordStepThree />)}
+            />
+            <Route
+              path="/dashboard"
+              element={withAnimatedPage(<Dashboard />)}
+            />
+            <Route
+              path="/place-detail"
+              element={withAnimatedPage(<PlaceDetail />)}
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>{withAnimatedPage(<Profile />)}</PrivateRoute>
+              }
+            />
+            <Route
+              path="/tambah-tempat"
+              element={
+                <PrivateRoute>{withAnimatedPage(<AddPlace />)}</PrivateRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <PrivateRoute>{withAnimatedPage(<ChatPage />)}</PrivateRoute>
+              }
+            />
+            <Route
+              path="/tambah-review"
+              element={
+                <PrivateRoute>{withAnimatedPage(<AddReview />)}</PrivateRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AnimatePresence>
       </BrowserRouter>
     </RegistrationProvider>
   );

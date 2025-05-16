@@ -277,7 +277,7 @@ const ChatPage = () => {
   return (
     <>
       <NavbarBack title="Chat" />
-      <div className="max-h-screen bg-white px-15 pt-3">
+      <div className="max-h-screen bg-white px-15 pt-25">
         <div className="flex space-x-5">
 
           {/* Sidebar */}

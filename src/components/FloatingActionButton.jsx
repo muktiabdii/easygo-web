@@ -57,10 +57,6 @@ const FloatingActionButton = ({ onLocateUser }) => {
     handleSecureNavigation("/chat");
   };
 
-  const handleProfileClick = () => {
-    handleSecureNavigation("/profile");
-  };
-
   const handleLogin = () => {
     setShowAuthDialog(false);
     navigate("/login", { state: { from: redirectPath } });
