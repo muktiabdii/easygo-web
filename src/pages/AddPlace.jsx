@@ -149,6 +149,7 @@ const AddPlace = () => {
     setIsLoading(true);
 
     try {
+      const token = localStorage.getItem('auth_header'); // Get stored token
       const formDataObj = new FormData();
       formDataObj.append("name", formData.namaTempat);
       formDataObj.append("address", formData.detailAlamat);
@@ -166,10 +167,11 @@ const AddPlace = () => {
         formDataObj.append("images[]", foto);
       });
 
-      const response = await axios.post("http://127.0.0.1:8000/api/places", formDataObj, {
+      const response = await axios.post("http://localhost:8000/api/places", formDataObj, {
         headers: {
           Accept: "application/json",
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}` 
         },
         withCredentials: true,
       });
@@ -195,7 +197,7 @@ const AddPlace = () => {
   const progressPercentage = (formData.fotos.length / MAX_IMAGES) * 100;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 pt-20">
       <NavbarBack title="Tambah Tempat" showAvatar={false} />
 
       <div className="container mx-auto max-w-lg px-4 py-6">
