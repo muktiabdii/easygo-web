@@ -1,16 +1,26 @@
-// Updated authUtils.js
+// authUtils.js
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-// waktu kadaluarsa token
+// Token expiration time (24 hours)
 const TOKEN_EXPIRATION = 24 * 60 * 60 * 1000;
 
-// cek jika token ada di http-only cookie
+// Initialize axios instance
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  withCredentials: true, // Always include credentials
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+// Check if user is authenticated
 export const isAuthenticated = () => {
   return !!Cookies.get('auth_session');
 };
 
-// cek token validity
+// Check token validity
 export const checkTokenValidity = () => {
   const authSession = Cookies.get('auth_session');
   
@@ -33,30 +43,47 @@ export const checkTokenValidity = () => {
   return false;
 };
 
-// data autentikasi
+// Set authentication data
 export const setAuth = (token) => {
-  Cookies.set('auth_session', 'true', { sameSite: 'strict' });
-  Cookies.set('auth_timestamp', new Date().getTime().toString(), { sameSite: 'strict' });
+  Cookies.set('auth_session', 'true', { sameSite: 'lax', path: '/' });
+  Cookies.set('auth_timestamp', new Date().getTime().toString(), { sameSite: 'lax', path: '/' });
   
-  // atur authorization header untuk sesi saat ini
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  // Set authorization header for current session
+  if (token) {
+    localStorage.setItem('auth_header', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
 };
 
-// hapus data autentikasi
+// Initialize auth from stored data (call this on app startup)
+export const initAuth = () => {
+  const authSession = Cookies.get('auth_session');
+  const storedToken = localStorage.getItem('auth_header');
+  
+  if (authSession && storedToken) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+    return true;
+  }
+  
+  return false;
+};
+
+// Remove authentication data
 export const logout = async () => {
   try {
-    // panggilan API untuk logout
-    await axios.post('http://localhost:8000/api/auth/logout');
+    // API call for logout
+    await api.post('/auth/logout');
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
-    Cookies.remove('auth_session');
-    Cookies.remove('auth_timestamp');
+    Cookies.remove('auth_session', { path: '/' });
+    Cookies.remove('auth_timestamp', { path: '/' });
+    localStorage.removeItem('auth_header');
     
-    // hapus authorization header
-    delete axios.defaults.headers.common['Authorization'];
+    // Remove authorization header
+    delete api.defaults.headers.common['Authorization'];
     
-    // arah ke halaman login jika tidak berada di halaman login
+    // Redirect to login page if not already there
     if (window.location.pathname !== '/login' && 
         window.location.pathname !== '/' && 
         window.location.pathname !== '/register-step-one' &&
@@ -66,21 +93,8 @@ export const logout = async () => {
   }
 };
 
-// request interceptor untuk menambahkan token ke header dan mengirimkan cookie HTTP-only
-axios.interceptors.request.use(
-  config => {
-    if (isAuthenticated() && !config.headers.Authorization) {
-      config.withCredentials = true;
-    }
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
-
-// respon interceptor untuk menangani error
-axios.interceptors.response.use(
+// Response interceptor to handle errors
+api.interceptors.response.use(
   response => {
     return response;
   },
@@ -92,16 +106,19 @@ axios.interceptors.response.use(
   }
 );
 
-// cek validasi token
+// Validate token with backend
 export const validateTokenWithBackend = async () => {
   if (!isAuthenticated()) return false;
   
   try {
-    // endpoint untuk memvalidasi token
-    const response = await axios.get('http://localhost:8000/api/auth/validate-token', {
-      withCredentials: true 
-    });
+    // Ensure Authorization header is set from localStorage
+    const storedToken = localStorage.getItem('auth_header');
+    if (storedToken) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+    }
     
+    // Endpoint to validate token
+    const response = await api.get('/auth/validate-token');
     return response.data.valid === true;
   } catch (error) {
     console.error('Token validation error:', error);
@@ -110,15 +127,12 @@ export const validateTokenWithBackend = async () => {
   }
 };
 
-// fungsi untuk login
+// Login function
 export const login = async (email, password) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/auth/login', 
-      { email, password },
-      { withCredentials: true } 
-    );
+    const response = await api.post('/auth/login', { email, password });
     
-    // atur client-side auth state
+    // Set client-side auth state
     if (response.data && response.data.token) {
       setAuth(response.data.token);
     }
@@ -129,15 +143,12 @@ export const login = async (email, password) => {
   }
 };
 
-// fungsi untuk register
+// Register function
 export const register = async (data) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/auth/register', 
-      data, 
-      { withCredentials: true }
-    );
+    const response = await api.post('/auth/register', data);
     
-    // atur client-side auth state
+    // Set client-side auth state
     if (response.data && response.data.token) {
       setAuth(response.data.token);
     }
@@ -147,3 +158,5 @@ export const register = async (data) => {
     throw error.response ? error.response.data : error.message; 
   }
 };
+
+export default api;

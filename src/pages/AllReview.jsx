@@ -31,7 +31,7 @@ const AllReview = () => {
       <NavbarBack title={placeName} showAvatar={false} />
     
     <div className="min-h-screen bg-white py-10 px-4">
-      <h2 className="text-4xl font-bold text-center text-[#3C91E6] mt-4 mb-12">Ulasan</h2>
+      <h2 className="text-4xl font-bold text-center text-[#3C91E6] mt-18 mb-12">Ulasan</h2>
 
       {/* Header Ulasan */}
       <div className="max-w-6xl mx-auto mb-8 relative">
