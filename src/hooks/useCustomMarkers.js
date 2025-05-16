@@ -1,4 +1,3 @@
-// hooks/useCustomMarkers.js
 import { useRef, useEffect } from 'react';
 import L from 'leaflet';
 

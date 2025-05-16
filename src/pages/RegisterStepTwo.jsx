@@ -1,37 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRegistration } from '../contexts/RegistrationContext';
 import { useRegister } from '../hooks/useRegister';
 import LoadingIndicator from '../components/LoadingIndicator';
 
 const RegisterStepTwo = () => {
-
-  // inisiasi data dari hook useRegister
+  const { registrationData, updateRegistrationData } = useRegistration();
   const { registerUser, loading, error } = useRegister();
   
-  // inisiasi state
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [password_confirmation, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState(registrationData.email || '');
+  const [password, setPassword] = useState(registrationData.password || '');
+  const [password_confirmation, setConfirmPassword] = useState(registrationData.password_confirmation || '');
   const [localError, setLocalError] = useState(null);
   
-  // mengambil data dari localStorage
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const storedData = JSON.parse(localStorage.getItem('registerData'));
-
+    
     if (password !== password_confirmation) {
       setLocalError('Password dan konfirmasi password tidak cocok');
       return;
     }
 
-    // mengirim data ke API register
+    // Update context dengan data dari form ini
+    updateRegistrationData({ email, password, password_confirmation });
+    
+    // Mengirim data ke API register dengan mengambil seluruh data dari context
     const success = await registerUser({
-      name: storedData.name,
-      number: storedData.number,
-      country: storedData.country,
-      province: storedData.province,
-      city: storedData.city,
+      name: registrationData.name,
+      number: registrationData.number,
+      country: registrationData.country,
+      province: registrationData.province,
+      city: registrationData.city,
       email,
       password,
       password_confirmation

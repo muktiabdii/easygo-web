@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Popup = ({
   selectedPlace,
@@ -8,6 +9,7 @@ const Popup = ({
   handleViewDetail,
 }) => {
   const popupRef = useRef(null);
+  const navigate = useNavigate(); // Add navigate hook
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,21 +40,16 @@ const Popup = ({
     return (
       <div className="flex items-center">
         <div className="flex text-xl">
-          {/* Bintang penuh */}
           {[...Array(fullStars)].map((_, i) => (
             <span key={`full-${i}`} className="text-yellow-400">
               ★
             </span>
           ))}
-
-          {/* Bintang setengah */}
           {hasHalfStar && (
             <span key="half" className="text-yellow-400">
               ★
             </span>
           )}
-
-          {/* Bintang kosong */}
           {[...Array(emptyStars)].map((_, i) => (
             <span key={`empty-${i}`} className="text-gray-300">
               ★
@@ -64,6 +61,16 @@ const Popup = ({
         </span>
       </div>
     );
+  };
+
+  // Modified handleViewDetail to pass selectedPlace
+  const onViewDetail = (e) => {
+    e.stopPropagation();
+    if (selectedPlace) {
+      navigate("/place-detail", {
+        state: { selectedPlace }, // Pass the entire selectedPlace object
+      });
+    }
   };
 
   return (
@@ -113,14 +120,14 @@ const Popup = ({
                         height="11"
                       />
                     </span>
-                    <span className="font-medium text-[14px]" >{facility.name}</span>
+                    <span className="font-medium text-[14px]">{facility.name}</span>
                   </div>
                 ))}
             </div>
 
             <div className="mt-4 text-center">
               <button
-                onClick={handleViewDetail}
+                onClick={onViewDetail} // Use the new handler
                 className="text-[#3C91E6] font-medium text-[14px] underline cursor-pointer hover:text-blue-700"
               >
                 Lihat Detail
