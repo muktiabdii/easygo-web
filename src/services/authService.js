@@ -1,5 +1,6 @@
 // authService.js
 import axios from 'axios';
+import { setAuth } from '../utils/authUtils';
 
 // Initialize API URLs
 const Login_API_URL = 'http://localhost:8000/api/auth/login'; 
