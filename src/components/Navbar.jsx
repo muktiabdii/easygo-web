@@ -189,9 +189,9 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         }`}
       >
         <div className="p-4">
-          <div className="flex items-center mb-4">
-            <img src="/icons/filter.png" alt="Filter" className="h-6 w-6 mr-2" />
-            <span className="font-semibold text-lg">Filter Aksesibilitas</span>
+          <div className="flex items-center mb-4 justify-center">
+            <img src="/icons/filter.png" alt="Filter" className="h-6 w-6 mr-4" />
+            <span className="font-semibold text-3xl">Filter</span>
           </div>
 
           <div className="space-y-1 max-h-[calc(100vh-100px)] overflow-y-auto">
@@ -206,6 +206,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
                 </div>
                 <input
                   type="checkbox"
+                  className="h-5 w-5e text-[#3C91E6] focus:ring-[#357FCC]" 
                   checked={selectedFilters.includes(filter.label)}
                   onChange={() => handleCheckboxChange(filter.label)}
                 />
