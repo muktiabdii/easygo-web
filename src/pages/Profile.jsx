@@ -1,7 +1,7 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarBack from "../components/NavbarBack";
+import ReviewCard from "../components/ReviewCard";
 import LogoutDialog from "../components/LogoutDialog";
 import { logout } from "../utils/authUtils";
 import axios from "axios";
@@ -489,7 +489,6 @@ const Profile = () => {
                   className="w-4 h-4 lg:w-5 lg:h-5"
                 />
               </button>
-            </div>
           </div>
         </div>
 
@@ -743,6 +742,7 @@ const Profile = () => {
           />
         )}
       </div>
+    </div>
     </div>
   );
 };

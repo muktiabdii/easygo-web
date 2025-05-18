@@ -116,7 +116,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && searchValue.trim() !== '') {
+    if (e.key === "Enter" && searchValue.trim() !== "") {
       if (onSearchSubmit) {
         onSearchSubmit();
       }
@@ -124,7 +124,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
   };
 
   const handleSearchClick = () => {
-    if (onSearchSubmit && searchValue.trim() !== '') {
+    if (onSearchSubmit && searchValue.trim() !== "") {
       onSearchSubmit();
     }
   };
@@ -185,7 +185,7 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
 
       <div
         className={`fixed top-0 left-0 h-full w-72 bg-[#3C91E6] text-white shadow-lg transform transition-transform duration-300 z-[1001] ${
-          isFilterOpen ? 'translate-x-0' : '-translate-x-full'
+          isFilterOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4">
@@ -193,7 +193,6 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
             <img src="/icons/filter.png" alt="Filter" className="h-6 w-6 mr-4" />
             <span className="font-semibold text-3xl">Filter</span>
           </div>
-
           <div className="space-y-1 max-h-[calc(100vh-100px)] overflow-y-auto">
             {filterOptions.map((filter) => (
               <label
@@ -216,7 +215,11 @@ const Navbar = ({ onSearchChange, onSearchSubmit, onFilterChange, hideBackground
         </div>
       </div>
 
-      <nav className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${hideBackground ? 'bg-transparent' : 'bg-[#EFF0F7] text-white'}`}>
+      <nav
+        className={`fixed top-0 left-0 w-full p-4 flex items-center justify-between z-[1000] ${
+          hideBackground ? "bg-transparent" : "bg-[#EFF0F7] text-white"
+        }`}
+      >
         <div className="flex items-center space-x-4">
           <button onClick={toggleFilter}>
             <img
