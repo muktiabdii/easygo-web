@@ -1,46 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import CustomNotification from "./CustomNotification";
 
 const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }) => {
-  const [start, setStart] = useState('');
-  const [destination, setDestination] = useState('');
-  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [start, setStart] = useState("");
+  const [destination, setDestination] = useState("");
+  const [currentLocationField, setCurrentLocationField] = useState(null); // Tracks which field uses current location: "start", "destination", or null
   const [startSuggestions, setStartSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
   const [locationWarning, setLocationWarning] = useState(null);
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
-    if (useCurrentLocation && currentLocation) {
-      setStart('Lokasi Sekarang');
+    if (currentLocationField === "start" && currentLocation) {
+      setStart("Lokasi Sekarang");
+    } else if (currentLocationField === "destination" && currentLocation) {
+      setDestination("Lokasi Sekarang");
     } else {
-      setStart('');
+      if (currentLocationField !== "start") setStart("");
+      if (currentLocationField !== "destination") setDestination("");
     }
-  }, [useCurrentLocation, currentLocation]);
+  }, [currentLocationField, currentLocation]);
 
   // Handle toggle change with warning
   const handleToggleLocation = () => {
-    console.log('Toggle clicked, currentLocation:', currentLocation); 
+    console.log("Toggle clicked, currentLocation:", currentLocation);
     if (!currentLocation || currentLocation === undefined) {
-      setLocationWarning('Aktifkan lokasi anda dulu pada tombol di pojok dashboard');
-      console.log('Setting warning:', locationWarning); 
+      setLocationWarning(
+        <span>
+          Aktifkan lokasi anda dulu dengan tombol{" "}
+          <img
+            src="/icons/synclocation-bk.png"
+            alt="Location Icon"
+            className="h-5 w-5 mx-1 mb-1 inline-block"
+          />
+          di pojok dashboard
+        </span>
+      );
+      console.log("Setting warning:", locationWarning);
       setTimeout(() => {
         setLocationWarning(null);
-        console.log('Clearing warning');
-      }, 3000); 
+        console.log("Clearing warning");
+      }, 3000);
       return;
     }
-    setUseCurrentLocation(!useCurrentLocation);
+    setCurrentLocationField((prev) => (prev === "start" ? null : "start"));
   };
 
   // Handle Start input change with suggestions
   const handleStartChange = (e) => {
     const value = e.target.value;
     setStart(value);
-    if (useCurrentLocation && value !== 'Lokasi Saya Saat Ini') {
-      setUseCurrentLocation(false);
+    if (currentLocationField === "start" && value !== "Lokasi Sekarang") {
+      setCurrentLocationField(null);
     }
-    if (value.trim() && !useCurrentLocation) {
+    if (value.trim() && currentLocationField !== "start") {
       const matches = places.filter((place) =>
         place.name.toLowerCase().includes(value.toLowerCase())
       );
@@ -54,7 +68,10 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
   const handleDestinationChange = (e) => {
     const value = e.target.value;
     setDestination(value);
-    if (value.trim()) {
+    if (currentLocationField === "destination" && value !== "Lokasi Sekarang") {
+      setCurrentLocationField(null);
+    }
+    if (value.trim() && currentLocationField !== "destination") {
       const matches = places.filter((place) =>
         place.name.toLowerCase().includes(value.toLowerCase())
       );
@@ -66,24 +83,32 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
 
   // Clear Start input
   const handleClearStart = () => {
-    setStart('');
+    setStart("");
     setStartSuggestions([]);
-    setUseCurrentLocation(false);
+    setCurrentLocationField((prev) => (prev === "start" ? null : prev));
   };
 
   // Clear Destination input
   const handleClearDestination = () => {
-    setDestination('');
+    setDestination("");
     setDestinationSuggestions([]);
+    setCurrentLocationField((prev) => (prev === "destination" ? null : prev));
   };
 
   // Swap Start and Destination
   const handleSwap = () => {
-    if (useCurrentLocation) {
-      setUseCurrentLocation(false);
+    if (currentLocationField === "start") {
+      // Swap: current location moves to destination
       setStart(destination);
-      setDestination('Lokasi Saya Saat Ini');
+      setDestination("Lokasi Sekarang");
+      setCurrentLocationField("destination");
+    } else if (currentLocationField === "destination") {
+      // Swap: current location moves to start
+      setDestination(start);
+      setStart("Lokasi Sekarang");
+      setCurrentLocationField("start");
     } else {
+      // Simple swap of start and destination
       setStart(destination);
       setDestination(start);
     }
@@ -92,7 +117,7 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
   // Handle Apply button
   const handleApply = async () => {
     if (!start.trim() || !destination.trim()) {
-      alert('Harap isi Start dan Tujuan.');
+      alert("Harap isi Start dan Tujuan.");
       return;
     }
 
@@ -100,7 +125,7 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
     let destCoords = null;
 
     // Resolve Start coordinates
-    if (useCurrentLocation) {
+    if (currentLocationField === "start" && start === "Lokasi Sekarang") {
       startCoords = currentLocation;
     } else {
       const matchedStart = places.find(
@@ -128,35 +153,39 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
     }
 
     // Resolve Destination coordinates
-    const matchedDest = places.find(
-      (place) => place.name.toLowerCase() === destination.toLowerCase()
-    );
-    if (matchedDest) {
-      destCoords = { lat: matchedDest.latitude, lng: matchedDest.longitude };
+    if (currentLocationField === "destination" && destination === "Lokasi Sekarang") {
+      destCoords = currentLocation;
     } else {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          destination
-        )}&countrycodes=ID`
+      const matchedDest = places.find(
+        (place) => place.name.toLowerCase() === destination.toLowerCase()
       );
-      const results = await response.json();
-      if (results.length > 0) {
-        destCoords = {
-          lat: parseFloat(results[0].lat),
-          lng: parseFloat(results[0].lon),
-        };
+      if (matchedDest) {
+        destCoords = { lat: matchedDest.latitude, lng: matchedDest.longitude };
+      } else {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            destination
+          )}&countrycodes=ID`
+        );
+        const results = await response.json();
+        if (results.length > 0) {
+          destCoords = {
+            lat: parseFloat(results[0].lat),
+            lng: parseFloat(results[0].lon),
+          };
+        }
       }
     }
 
     if (!startCoords || !destCoords) {
-      alert('Tidak dapat menemukan lokasi untuk Start atau Tujuan.');
+      alert("Tidak dapat menemukan lokasi untuk Start atau Tujuan.");
       return;
     }
 
     setIsOpen(false);
     setTimeout(() => {
       onApply(startCoords, destCoords);
-    }, 300); 
+    }, 300);
   };
 
   // Handle Cancel button
@@ -169,31 +198,31 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
 
   // Animation for the backdrop
   const backdropVariants = {
-    hidden: { opacity: 0, backdropFilter: 'blur(0px)' },
-    visible: { 
-      opacity: 1, 
-      backdropFilter: 'blur(4px)', 
-      transition: { duration: 0.3, ease: 'easeInOut' } 
+    hidden: { opacity: 0, backdropFilter: "blur(0px)" },
+    visible: {
+      opacity: 1,
+      backdropFilter: "blur(4px)",
+      transition: { duration: 0.3, ease: "easeInOut" },
     },
-    exit: { 
-      opacity: 0, 
-      backdropFilter: 'blur(0px)', 
-      transition: { duration: 0.3, ease: 'easeInOut' } 
+    exit: {
+      opacity: 0,
+      backdropFilter: "blur(0px)",
+      transition: { duration: 0.3, ease: "easeInOut" },
     },
   };
 
   // Animation variants for the popup
   const popupVariants = {
-    hidden: { y: '100vh', opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1, 
-      transition: { duration: 0.4, ease: 'easeOut' } 
+    hidden: { y: "100vh", opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.4, ease: "easeOut" },
     },
-    exit: { 
-      y: '100vh', 
-      opacity: 0, 
-      transition: { duration: 0.3, ease: 'easeIn' } 
+    exit: {
+      y: "100vh",
+      opacity: 0,
+      transition: { duration: 0.3, ease: "easeIn" },
     },
   };
 
@@ -211,7 +240,9 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
             className="bg-white rounded-xl p-6 w-100 shadow-lg"
             variants={popupVariants}
           >
-            <h2 className="text-2xl font-semibold mb-6 text-[#3C91E6] text-center">Atur Rute</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-[#3C91E6] text-center">
+              Atur Rute
+            </h2>
 
             {/* Use My Location Toggle */}
             <div className="flex items-center justify-between mb-4 pl-4 pr-2">
@@ -221,34 +252,28 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
               <button
                 onClick={handleToggleLocation}
                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3C91E6] ${
-                  useCurrentLocation ? 'bg-[#3C91E6]' : 'bg-gray-200'
-                } ${!currentLocation}`}
+                  currentLocationField ? "bg-[#3C91E6]" : "bg-gray-200"
+                }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                    useCurrentLocation ? 'translate-x-6' : 'translate-x-1'
+                    currentLocationField ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>
             </div>
 
-            {/* Location Warning Toast */}
+            {/* Location Warning Notification */}
             {locationWarning && (
-              <motion.div
-                className="fixed top-16 left-1/2 transform -translate-x-1/2 z-[1005] bg-red-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <span>Aktifkan lokasi anda dulu dengan tombol</span>
-                <img 
-                  src="/icons/synclocation.png" 
-                  alt="Location Icon" 
-                  className="h-5 w-5 mx-2 inline-block"
-                />
-                <span>di pojok dashboard</span>
-              </motion.div>
+              <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-[1005] max-w-md w-full">
+                <CustomNotification
+                  title="Peringatan"
+                  type="warning"
+                  onClose={() => setLocationWarning(null)}
+                >
+                  {locationWarning}
+                </CustomNotification>
+              </div>
             )}
 
             {/* Start Input */}
@@ -260,9 +285,9 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
                   onChange={handleStartChange}
                   placeholder="Masukkan lokasi awal"
                   className="w-full p-2 pr-10 border border-[#3C91E6] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#3C91E6]"
-                  disabled={useCurrentLocation}
+                  disabled={currentLocationField === "start"}
                 />
-                {start && !useCurrentLocation && (
+                {start && currentLocationField !== "start" && (
                   <button
                     onClick={handleClearStart}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-[#3C91E6] hover:text-[#357FCC] focus:outline-none z-[1003] cursor-pointer hover:scale-125 transition-transform"
@@ -275,7 +300,7 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
                   </button>
                 )}
               </div>
-              {startSuggestions.length > 0 && !useCurrentLocation && (
+              {startSuggestions.length > 0 && currentLocationField !== "start" && (
                 <div className="mt-1 bg-white border border-gray-200 rounded-md shadow-sm">
                   {startSuggestions.map((place) => (
                     <div
@@ -313,8 +338,9 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
                   onChange={handleDestinationChange}
                   placeholder="Masukkan tujuan"
                   className="w-full p-2 pr-10 border border-[#3C91E6] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#3C91E6]"
+                  disabled={currentLocationField === "destination"}
                 />
-                {destination && (
+                {destination && currentLocationField !== "destination" && (
                   <button
                     onClick={handleClearDestination}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-[#3C91E6] hover:text-[#357FCC] focus:outline-none z-[1003] cursor-pointer hover:scale-125 transition-transform"
@@ -327,7 +353,7 @@ const RoutePopup = ({ onApply, onCancel, currentLocation, places, onLocateUser }
                   </button>
                 )}
               </div>
-              {destinationSuggestions.length > 0 && (
+              {destinationSuggestions.length > 0 && currentLocationField !== "destination" && (
                 <div className="mt-1 bg-white border border-gray-200 rounded-md shadow-sm">
                   {destinationSuggestions.map((place) => (
                     <div

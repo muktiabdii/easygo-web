@@ -1,13 +1,13 @@
 import React from "react";
-import NavbarBack from "../components/NavbarBack";
+import Navbar from "../components/Navbar";
 
 const AboutPage = () => {
   return (
     <>
-      <NavbarBack title="About" />
+      <Navbar hideBackground={false} showSearch={false} showFilter={false} />
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-blue-600 to-indigo-800 px-6 pt-24 pb-16 text-center overflow-hidden">
+      <div className="relative bg-gradient-to-r from-blue-600 to-indigo-800 px-6 pt-30 pb-16 text-center overflow-hidden">
         {/* Background Image with Parallax Effect */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30 animate-parallax"
@@ -15,18 +15,6 @@ const AboutPage = () => {
             backgroundImage: "url('/disable.jpg')",
           }}
         ></div>
-
-        {/* Floating Accessibility Icons */}
-        <img
-          src="/icons/star-filled.png"
-          alt="Wheelchair Icon"
-          className="absolute top-10 left-10 w-16 h-16 animate-bounce-slow opacity-70"
-        />
-        <img
-          src="/icons/star-filled.png"
-          alt="Braille Icon"
-          className="absolute bottom-10 right-20 w-16 h-16 animate-bounce-slow delay-200 opacity-70"
-        />
 
         {/* Main Content */}
         <div className="relative z-10">
@@ -193,13 +181,19 @@ const AboutPage = () => {
                       alt={member.name}
                       className="w-28 h-28 rounded-full mb-3 object-cover border-4 border-transparent"
                     />
-                    <p className="font-medium text-gray-800 text-base">{member.name}</p>
+                    <p className="font-medium text-gray-800 text-base">
+                      {member.name}
+                    </p>
                   </div>
 
                   {/* Back of the Card */}
                   <div className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-6 bg-blue-100 rounded-xl rotate-y-180">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-2">{member.role}</h3>
-                    <p className="text-gray-600 text-sm text-center leading-relaxed">{member.bio}</p>
+                    <h3 className="font-semibold text-gray-800 text-lg mb-2">
+                      {member.role}
+                    </h3>
+                    <p className="text-gray-600 text-sm text-center leading-relaxed">
+                      {member.bio}
+                    </p>
                     <a
                       href={member.linkedin}
                       target="_blank"
@@ -218,65 +212,65 @@ const AboutPage = () => {
       </div>
 
       {/* Footer */}
-        <footer className="relative bg-gray-50 px-20 py-10 text-sm text-gray-600 mt-10 rounded-t-xl overflow-hidden animate-fadeInSlow">
-          {/* Icon */}
-          <img
-            src="/logo.png"
-            alt="Background Icon"
-            className="absolute w-40 bottom-40"
-          />
+      <footer className="relative bg-gray-50 px-20 py-10 text-sm text-gray-600 mt-10 rounded-t-xl overflow-hidden animate-fadeInSlow">
+        {/* Icon */}
+        <img
+          src="/logo.png"
+          alt="Background Icon"
+          className="absolute w-40 bottom-40"
+        />
 
-          {/* Info Section */}
-          <div className="relative z-10 mb-6 text-center">
-            <h3 className="text-xl font-semibold text-gray-800 animate-fadeInUp">
-              Bersama wujudkan aksesibilitas
-            </h3>
-            <p className="text-lg text-gray-600 animate-fadeInUp delay-200">
-              Mari jadi bagian dari perubahan menuju lingkungan inklusif
-            </p>
-          </div>
+        {/* Info Section */}
+        <div className="relative z-10 mb-6 text-center">
+          <h3 className="text-xl font-semibold text-gray-800 animate-fadeInUp">
+            Bersama wujudkan aksesibilitas
+          </h3>
+          <p className="text-lg text-gray-600 animate-fadeInUp delay-200">
+            Mari jadi bagian dari perubahan menuju lingkungan inklusif
+          </p>
+        </div>
 
-          {/* Contact and Social */}
-          <div className="text-base relative z-10 grid md:grid-cols-2 gap-6 items-center mb-6">
-            <div>
-              <p>📍 JL Veteran No.10-11, Ketawanggede, Malang</p>
-              <p>📧 easygo@email.com | 📞 08 1234 5678 90</p>
-            </div>
-            <div className="flex justify-center md:justify-end gap-4">
-              {[
-                {
-                  src: "https://cdn-icons-png.flaticon.com/512/733/733635.png",
-                  alt: "X",
-                },
-                {
-                  src: "https://cdn-icons-png.flaticon.com/512/2111/2111463.png",
-                  alt: "Instagram",
-                },
-                {
-                  src: "https://cdn-icons-png.flaticon.com/512/145/145807.png",
-                  alt: "LinkedIn",
-                },
-                {
-                  src: "https://cdn-icons-png.flaticon.com/512/733/733547.png",
-                  alt: "Facebook",
-                },
-              ].map((icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="transform hover:scale-125 transition duration-300"
-                >
-                  <img src={icon.src} alt={icon.alt} className="w-6 h-6" />
-                </a>
-              ))}
-            </div>
+        {/* Contact and Social */}
+        <div className="text-base relative z-10 grid md:grid-cols-2 gap-6 items-center mb-6">
+          <div>
+            <p>📍 JL Veteran No.10-11, Ketawanggede, Malang</p>
+            <p>📧 easygo@email.com | 📞 08 1234 5678 90</p>
           </div>
+          <div className="flex justify-center md:justify-end gap-4">
+            {[
+              {
+                src: "https://cdn-icons-png.flaticon.com/512/733/733635.png",
+                alt: "X",
+              },
+              {
+                src: "https://cdn-icons-png.flaticon.com/512/2111/2111463.png",
+                alt: "Instagram",
+              },
+              {
+                src: "https://cdn-icons-png.flaticon.com/512/145/145807.png",
+                alt: "LinkedIn",
+              },
+              {
+                src: "https://cdn-icons-png.flaticon.com/512/733/733547.png",
+                alt: "Facebook",
+              },
+            ].map((icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="transform hover:scale-125 transition duration-300"
+              >
+                <img src={icon.src} alt={icon.alt} className="w-6 h-6" />
+              </a>
+            ))}
+          </div>
+        </div>
 
-          {/* Copyright */}
-          <div className="relative z-10 text-center text-sm text-gray-500">
-            <p>© {new Date().getFullYear()} EasyGo. All rights reserved.</p>
-          </div>
-        </footer>
+        {/* Copyright */}
+        <div className="relative z-10 text-center text-sm text-gray-500">
+          <p>© {new Date().getFullYear()} EasyGo. All rights reserved.</p>
+        </div>
+      </footer>
     </>
   );
 };

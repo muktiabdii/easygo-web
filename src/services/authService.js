@@ -1,88 +1,88 @@
-// authService.js
+// src/services/authService.js
 import axios from 'axios';
-import { setAuth } from '../utils/authUtils';
+import Cookies from 'js-cookie';
+import { setAuth, isAuthenticated, checkTokenValidity, logout, initAuth } from '../utils/authUtils';
 
-// Initialize API URLs
-const Login_API_URL = 'http://localhost:8000/api/auth/login'; 
-const Register_API_URL = 'http://localhost:8000/api/auth/register';
-const ForgotPassword_API_URL = 'http://localhost:8000/api/auth/password/forgot';
-const validateOTP_API_URL = 'http://localhost:8000/api/auth/password/validate-otp';
-const ResetPassword_API_URL = 'http://localhost:8000/api/auth/password/reset';
+// Initialize axios instance
+const api = axios.create({
+    baseURL: 'http://localhost:8000/api',
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+});
 
 // Login function
 export const login = async (email, password) => {
-  try {
-    const response = await axios.post(Login_API_URL, 
-      { email, password }, 
-      { withCredentials: true } 
-    );
-    
-    // Store auth state - we rely on HttpOnly cookies for the actual token
-    if (response.data && response.data.token) {
-      setAuth(response.data.token);
+    try {
+        const response = await api.post('/auth/login', { email, password });
+        if (response.data && response.data.token) {
+            setAuth(response.data.token);
+        }
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
     }
-    
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
-  }
+};
+
+// Admin login function
+export const adminLogin = async (email, password) => {
+    try {
+        const response = await api.post('/auth/admin-login', { email, password });
+        if (response.data && response.data.token) {
+            setAuth(response.data.token);
+        }
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
 };
 
 // Register function
 export const register = async (data) => {
-  try {
-    const response = await axios.post(Register_API_URL, 
-      data, 
-      { withCredentials: true } 
-    );
-    
-    // Store auth state if auto-login after registration
-    if (response.data && response.data.token) {
-      setAuth(response.data.token);
+    try {
+        const response = await api.post('/auth/register', data);
+        if (response.data && response.data.token) {
+            setAuth(response.data.token);
+        }
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
     }
-    
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
-  }
 };
 
-// Send email for password reset
+// Forgot password function
 export const forgotPassword = async (email) => {
-  try {
-    const response = await axios.post(ForgotPassword_API_URL, { email });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
-  }
+    try {
+        const response = await api.post('/auth/password/forgot', { email });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
 };
 
 // OTP validation function
 export const validateOTP = async (email, otp) => {
-  try {
-    const response = await axios.post(validateOTP_API_URL, { email, otp });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
-  }
+    try {
+        const response = await api.post('/auth/password/validate-otp', { email, otp });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
 };
 
 // Reset password function
 export const resetPassword = async (email, otp, password, password_confirmation) => {
-  try {
-    const response = await axios.post(ResetPassword_API_URL, { email, otp, password, password_confirmation });
-    return response.data; 
-  } 
-  
-  catch (error) {
-    throw error.response ? error.response.data : error.message; 
-  }
+    try {
+        const response = await api.post('/auth/password/reset', { email, otp, password, password_confirmation });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
 };
+
+// Export utility functions from authUtils
+export { isAuthenticated, checkTokenValidity, logout, initAuth };
+
+export default api;

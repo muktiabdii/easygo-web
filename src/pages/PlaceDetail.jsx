@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, forwardRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { motion, AnimatePresence } from "framer-motion";
 import NavbarBack from "../components/NavbarBack";
-import api from "../utils/authUtils";
+import ConfirmDialog from "../components/ConfirmDialog"; // Impor ConfirmDialog
+import api, { isAuthenticated } from "../utils/authUtils";
 
 // Daftar lengkap fasilitas aksesibilitas dengan ikon khusus
 const allAccessibilityFeatures = [
@@ -18,7 +19,7 @@ const allAccessibilityFeatures = [
   { id: 8, name: "Menu Braille", icon: "menubraille-bk" },
 ];
 
-// Variants for the modal content (slide animation)
+// Variants for carousel modal (slide + fade)
 const modalVariants = {
   hidden: { y: "100vh", opacity: 0 },
   visible: {
@@ -31,6 +32,13 @@ const modalVariants = {
     opacity: 0,
     transition: { duration: 0.3, ease: "easeIn" },
   },
+};
+
+// Variants for review image modal (fade only)
+const fadeModalVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3, ease: "easeInOut" } },
+  exit: { opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } },
 };
 
 // Variants for the background (fade animation)
@@ -70,18 +78,16 @@ const PlaceDetail = () => {
   const [error, setError] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false); // State untuk login dialog
+  const [selectedImage, setSelectedImage] = useState(null); // For carousel images
+  const [selectedReviewImage, setSelectedReviewImage] = useState(null); // For review images
 
   // Default fallback jika selectedPlace tidak tersedia
   const placeId = selectedPlace?.id;
-  const placeName = selectedPlace?.name || "Universitas Brawijaya";
-  const placeAddress =
-    selectedPlace?.address ||
-    "Jl Veteran No.10-11, Kec. Lowokwaru, Kota Malang";
+  const placeName = selectedPlace?.name || "Nama tempat tidak tersedia";
+  const placeAddress = selectedPlace?.address || "Alamat tempat tidak tersedia";
   const images = selectedPlace?.images || [];
   const facilities = selectedPlace?.facilities || [];
-
-  // State untuk modal gambar full-screen
-  const [selectedImage, setSelectedImage] = useState(null);
 
   // Fetch reviews and check review status
   useEffect(() => {
@@ -93,20 +99,24 @@ const PlaceDetail = () => {
       }
 
       try {
-        // Fetch reviews
         const reviewsResponse = await api.get(`/places/${placeId}/reviews`);
         setReviews(reviewsResponse.data);
 
-        // Fetch review status
-        try {
-          const reviewStatusResponse = await api.get(`/places/${placeId}/has-reviewed`);
-          setHasReviewed(reviewStatusResponse.data.hasReviewed);
-        } catch (err) {
-          if (err.response?.status === 401) {
-            setHasReviewed(false); // User not authenticated
-          } else {
-            console.error("Error fetching review status:", err);
+        if (isAuthenticated()) {
+          try {
+            const reviewStatusResponse = await api.get(
+              `/places/${placeId}/has-reviewed`
+            );
+            setHasReviewed(reviewStatusResponse.data.hasReviewed);
+          } catch (err) {
+            if (err.response?.status === 401) {
+              setHasReviewed(false);
+            } else {
+              console.error("Error fetching review status:", err);
+            }
           }
+        } else {
+          setHasReviewed(false);
         }
 
         setLoading(false);
@@ -120,20 +130,28 @@ const PlaceDetail = () => {
     fetchData();
   }, [placeId]);
 
-  // Fungsi untuk membuka modal gambar
+  // Fungsi untuk membuka modal gambar (carousel)
   const handleImageClick = (image) => {
     setSelectedImage(image);
+  };
+
+  // Fungsi untuk membuka modal gambar ulasan
+  const handleReviewImageClick = (image) => {
+    setSelectedReviewImage(image);
   };
 
   // Fungsi untuk menutup modal
   const closeModal = () => {
     setSelectedImage(null);
+    setSelectedReviewImage(null);
   };
 
   // Fungsi untuk navigasi ke halaman tambah ulasan
   const navigateToAddReview = () => {
-    if (hasReviewed) {
-      setShowWarningDialog(true);
+    if (!isAuthenticated()) {
+      setShowLoginDialog(true); // Tampilkan ConfirmDialog untuk login
+    } else if (hasReviewed) {
+      setShowWarningDialog(true); // Tampilkan dialog peringatan jika sudah review
     } else {
       navigate("/tambah-review", {
         state: {
@@ -151,12 +169,33 @@ const PlaceDetail = () => {
     setShowWarningDialog(false);
   };
 
+  // Handle login confirmation
+  const handleLoginConfirm = () => {
+    setShowLoginDialog(false);
+    navigate("/login", {
+      state: {
+        from: location.pathname,
+        placeId: selectedPlace?.id,
+        placeName,
+        placeAddress,
+        facilities,
+      },
+    });
+  };
+
+  // Close login dialog
+  const closeLoginDialog = () => {
+    setShowLoginDialog(false);
+  };
+
   // Navigate to all reviews page
   const navigateToAllReviews = () => {
-    navigate(`/places/${placeId}/reviews`, {
+    navigate("/reviews", {
       state: {
         placeName: placeName,
         placeAddress: placeAddress,
+        facilities: facilities,
+        reviews: reviews,
       },
     });
   };
@@ -199,44 +238,60 @@ const PlaceDetail = () => {
       </button>
     );
 
-  // Fungsi untuk merender bintang rating
-  const renderRatingStars = (rating =Stud0) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-    return (
-      <div className="text-yellow-500 mb-4 flex">
-        {[...Array(fullStars)].map((_, i) => (
-          <span key={`full-${i}`} className="text-3xl">
-            ★
-          </span>
-        ))}
-        {hasHalfStar && <span className="text-3xl">★</span>}
-        {[...Array(emptyStars)].map((_, i) => (
-          <span key={`empty-${i}`} className="text-3xl text-gray-300">
-            ★
-          </span>
-        ))}
-      </div>
-    );
-  };
-
-  // Error handling jika selectedPlace tidak ada
-  if (!selectedPlace) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-500">Data tempat tidak tersedia</p>
-      </div>
-    );
-  }
-
   // Fungsi untuk menentukan status ketersediaan fasilitas
   const getFacilityStatus = () => {
-    return allAccessibilityFeatures.map((feature) => ({
-      ...feature,
-      available: facilities.some((facility) => facility.name === feature.name),
-    }));
+    const facilityCounts = allAccessibilityFeatures.reduce((acc, feature) => {
+      acc[feature.id] = {
+        name: feature.name,
+        icon: feature.icon,
+        count: 0,
+      };
+      return acc;
+    }, {});
+
+    const totalContributors = 1 + reviews.length;
+
+    facilities.forEach((facility) => {
+      const feature = allAccessibilityFeatures.find(
+        (f) => f.name === facility.name
+      );
+      if (feature) {
+        facilityCounts[feature.id].count += 1;
+      }
+    });
+
+    reviews.forEach((review) => {
+      if (
+        review.confirmed_facilities &&
+        Array.isArray(review.confirmed_facilities)
+      ) {
+        review.confirmed_facilities.forEach((facility) => {
+          const feature = allAccessibilityFeatures.find(
+            (f) => f.name === facility.name
+          );
+          if (feature) {
+            facilityCounts[feature.id].count += 1;
+          }
+        });
+      }
+    });
+
+    return allAccessibilityFeatures.map((feature) => {
+      const countData = facilityCounts[feature.id];
+      const confirmationPercentage =
+        totalContributors > 0 ? countData.count / totalContributors : 0;
+      const available =
+        totalContributors <= 3
+          ? countData.count > 0
+          : confirmationPercentage >= 0.5;
+      return {
+        ...feature,
+        available,
+        confirmationCount: countData.count,
+        totalContributors,
+        confirmationPercentage: (confirmationPercentage * 100).toFixed(1),
+      };
+    });
   };
 
   // Helper to find facility availability from review
@@ -251,20 +306,28 @@ const PlaceDetail = () => {
     return review.confirmed_facilities.slice(0, 4);
   };
 
-  const accessibilityFeaturesWithStatus = getFacilityStatus();
+  // Helper to get review images
+  const getReviewImages = (review) => {
+    if (
+      !review.images ||
+      !Array.isArray(review.images) ||
+      review.images.length === 0
+    ) {
+      return [];
+    }
+    return review.images;
+  };
 
-  // Get at most 2 reviews to display
+  const accessibilityFeaturesWithStatus = getFacilityStatus();
   const displayedReviews = reviews.slice(0, 2);
 
   return (
     <div className="pt-20">
       <NavbarBack title={placeName} />
-
       <div className="text-center mt-10">
         <h2 className="text-3xl font-bold text-[#3C91E6]">{placeName}</h2>
         <p className="text-xl text-black mt-2 mb-10">{placeAddress}</p>
       </div>
-
       {/* 📷 Carousel dengan Gambar dari selectedPlace */}
       <div className="mt-4 mx-20 bg-gray-100 rounded-[20px] overflow-hidden">
         {images.length === 0 ? (
@@ -304,8 +367,7 @@ const PlaceDetail = () => {
           </Carousel>
         )}
       </div>
-
-      {/* Modal Gambar Full-screen dengan Animasi Slide Fade */}
+      {/* Modal Gambar Full-screen (Carousel) */}
       <AnimatePresence>
         {selectedImage && (
           <motion.div
@@ -337,8 +399,39 @@ const PlaceDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Warning Dialog */}
+      {/* Modal Gambar Ulasan */}
+      <AnimatePresence>
+        {selectedReviewImage && (
+          <motion.div
+            className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50"
+            onClick={closeModal}
+            variants={backgroundVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <motion.div
+              className="relative max-w-4xl w-full h-[90vh] flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+              variants={fadeModalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <img
+                src={selectedReviewImage.image_url}
+                alt="Preview ulasan"
+                className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/placeholder_img.png";
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Warning Dialog for Already Reviewed */}
       <AnimatePresence>
         {showWarningDialog && (
           <motion.div
@@ -361,7 +454,8 @@ const PlaceDetail = () => {
                 Peringatan
               </h3>
               <p className="text-gray-600 mb-6">
-                Anda sudah memberikan ulasan untuk tempat ini. Setiap pengguna hanya dapat memberikan satu ulasan per tempat.
+                Anda sudah memberikan ulasan untuk tempat ini. Setiap pengguna
+                hanya dapat memberikan satu ulasan per tempat.
               </p>
               <div className="flex justify-end gap-4">
                 <button
@@ -375,7 +469,19 @@ const PlaceDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
+      {/* Login Dialog using ConfirmDialog */}
+      {showLoginDialog && (
+        <ConfirmDialog
+          isOpen={showLoginDialog}
+          onConfirm={handleLoginConfirm}
+          onCancel={closeLoginDialog}
+          message="Anda perlu login untuk menambahkan ulasan. Silakan login terlebih dahulu."
+          confirmLabel="Login"
+          cancelLabel="Batal"
+          confirmColor="text-[#3C91E6]"
+          cancelColor="text-red-500"
+        />
+      )}
       <div className="mt-6 px-4">
         <h3 className="font-semibold text-2xl text-center mb-10 mt-15">
           Fasilitas Aksesibilitas
@@ -405,7 +511,9 @@ const PlaceDetail = () => {
                     alt={feature.available ? "Tersedia" : "Tidak Tersedia"}
                     className="w-6 h-6"
                     onError={(e) => {
-                      console.error(`Failed to load status icon for ${feature.name}`);
+                      console.error(
+                        `Failed to load status icon for ${feature.name}`
+                      );
                       e.target.src = "/icons/fallback_icon.png";
                     }}
                   />
@@ -416,7 +524,8 @@ const PlaceDetail = () => {
         </div>
       </div>
 
-      <div className="mt-6 px-15 mx-4">
+      {/* Ulasan */}
+      <div className="mt-6 px-4">
         <h3 className="font-semibold text-2xl text-center mb-5">Ulasan</h3>
 
         {loading ? (
@@ -430,75 +539,112 @@ const PlaceDetail = () => {
             Belum ada ulasan. Jadilah yang pertama memberikan ulasan!
           </div>
         ) : (
-          <div className="border-2 border-[#3C91E6] rounded-lg overflow-hidden">
+          <div className="max-w-6xl mx-auto border-[#3C91E6] border-2 rounded-2xl p-4">
             {displayedReviews.map((review, index) => (
               <React.Fragment key={review.id || index}>
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <img
-                        src={review.user?.profile_image || "/icons/user.png"}
-                        alt={review.user?.name || "Pengguna"}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/icons/user.png";
-                        }}
-                      />
-                    </div>
-                    <span className="text-xl font-semibold text-gray-800">
-                      {review.user?.name || "Pengguna"}
-                    </span>
+                <div className="flex gap-2 py-6">
+                  {/* Icon User */}
+                  <div className="w-16 flex-shrink-0 flex justify-center items-start pt-2 ml-4">
+                    <img
+                      src={review.user?.profile_image || "/icons/user.png"}
+                      alt={review.user?.name || "Pengguna"}
+                      className="w-[52px] h-[52px] rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/icons/user.png";
+                      }}
+                    />
                   </div>
 
-                  <div className="pl-[60px]">
-                    {renderRatingStars(review.rating)}
-
-                    {getReviewFacilities(review).length > 0 ? (
-                      <div className="mb-5 space-y-2">
-                        <h4 className="text-sm font-medium text-gray-500 mb-2">
-                          Fasilitas yang dikonfirmasi:
-                        </h4>
-                        {getReviewFacilities(review).map((facility) => (
-                          <div
-                            key={facility.id}
-                            className="flex items-center"
-                          >
-                            <span className="inline-block w-36 font-light text-black">
-                              {facility.name}
+                  {/* Isi Review */}
+                  <div className="flex-1 pl-4 space-y-4">
+                    {/* Nama & Rating */}
+                    <div>
+                      <p className="font-semibold text-gray-800 text-xl">
+                        {review.user?.name || "Pengguna"}
+                      </p>
+                      <div className="text-yellow-500 text-3xl">
+                        {Array(Math.floor(review.rating))
+                          .fill("★")
+                          .map((star, i) => (
+                            <span key={i} className="mr-2">
+                              {star}
                             </span>
-                            <img
-                              src="/icons/check_rounded.png"
-                              alt="Tersedia"
-                              className="w-5 h-5"
-                              onError={(e) => {
-                                console.error(
-                                  `Failed to load check icon for facility ${facility.name}`
-                                );
-                                e.target.src = "/icons/fallback_icon.png";
-                              }}
-                            />
-                          </div>
-                        ))}
+                          ))}
                       </div>
-                    ) : null}
+                    </div>
 
+                    {/* Fasilitas */}
+                    {getReviewFacilities(review).length > 0 && (
+                      <div>
+                        <ul className="text-base text-gray-700 space-y-2">
+                          {getReviewFacilities(review).map((facility, i) => (
+                            <li key={facility.id} className="flex items-center">
+                              <div style={{ width: "125px" }} className="mr-2">
+                                <span>{facility.name}</span>
+                              </div>
+                              <img
+                                src="/icons/check_rounded_bk.png"
+                                alt="Tersedia"
+                                className="w-5 h-5"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "/icons/fallback_icon.png";
+                                }}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Komentar */}
                     <div className="mt-3">
                       <h4 className="text-sm font-medium text-gray-500 mb-2">
                         Ulasan:
                       </h4>
                       <p className="text-xl text-black">
                         {review.comment
-                          ? `"${review.comment}"`
+                          ? `${review.comment}`
                           : "Tidak ada komentar"}
                       </p>
                     </div>
+
+                    {/* Foto-foto Ulasan */}
+                    {getReviewImages(review).length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">
+                          Foto:
+                        </h4>
+                        <div className="flex flex-wrap gap-3">
+                          {getReviewImages(review).map((image, imgIndex) => (
+                            <div
+                              key={image.id || imgIndex}
+                              className="cursor-pointer rounded-lg overflow-hidden"
+                              onClick={() => handleReviewImageClick(image)}
+                            >
+                              <img
+                                src={image.image_url}
+                                alt={`Foto ulasan ${imgIndex + 1}`}
+                                className="h-28 w-28 object-cover rounded-lg hover:opacity-90 transition-opacity"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "/placeholder_img.png";
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* Divider antara review */}
                 {index < displayedReviews.length - 1 && (
                   <div className="flex justify-center">
-                    <div className="w-11/12 h-px bg-gray-400"></div>
+                    <div className="w-11/12 h-px bg-[#3C91E6]"></div>
                   </div>
                 )}
               </React.Fragment>
@@ -506,7 +652,6 @@ const PlaceDetail = () => {
           </div>
         )}
       </div>
-
       <div className="mt-5 px-4 flex flex-col items-center gap-6 mb-6">
         {reviews.length > 0 && (
           <button

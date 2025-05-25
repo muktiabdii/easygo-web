@@ -1,32 +1,97 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarBack from "../components/NavbarBack";
-import ReviewCard from "../components/ReviewCard";
-import LogoutDialog from "../components/LogoutDialog";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { logout } from "../utils/authUtils";
 import axios from "axios";
+import CustomNotification from "../components/CustomNotification";
+import LoadingIndicator from "../components/LoadingIndicator"; // Import the new LoadingIndicator
 
-const reviews = [
-  {
-    image: "../assets/universitas-brawijaya.jpg",
-    title: "Universitas Brawijaya",
-    address: "Jl. Veteran No.8, Malang",
-    rating: 4.9,
-    features: ["toiletdisabilitas-w", "jalurkursiroda-w"],
-  },
-  {
-    image: "../assets/UnivIndo.jpeg",
-    title: "Universitas Indonesia",
-    address: "Depok, Jawa Barat",
-    rating: 4.7,
-    features: ["liftbraille-w", "pintuotomatis-w"],
-  },
-];
+// Facility icon mapping
+const facilityIconMap = {
+  1: "jalurkursiroda-w",
+  2: "pintuotomatis-w",
+  3: "parkirdisabilitas-w",
+  4: "toiletdisabilitas-w",
+  5: "liftbraille-w",
+  6: "interpreterisyarat-w",
+  7: "menubraille-w",
+  8: "jalurguildingblock-w",
+};
 
 // Sample data for dropdowns
 const provinces = ["Jawa Timur", "Jawa Barat", "Jawa Tengah", "DKI Jakarta"];
 const countries = ["Indonesia", "Malaysia", "Singapore", "Thailand"];
 const cities = ["Malang", "Surabaya", "Jakarta", "Bandung"];
+
+// Profile-specific dropdown component
+const ProfileDropdown = ({
+  isOpen,
+  toggle,
+  selected,
+  options,
+  onSelect,
+  className = "",
+  placeholder = "",
+  disabled = false,
+  dropdownRef,
+}) => (
+  <div className={`relative ${className}`} ref={dropdownRef}>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        toggle(e);
+      }}
+      className={`w-full h-10 sm:h-11 md:h-12 px-3 py-2 text-xs sm:text-sm md:text-base bg-white rounded-xl shadow-md border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 flex items-center justify-between ${
+        disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-lg"
+      }`}
+      disabled={disabled}
+      aria-label={placeholder}
+    >
+      <span className="text-gray-800 truncate">{selected || placeholder}</span>
+      <svg
+        className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 transition-transform duration-200 ${
+          isOpen ? "rotate-180" : ""
+        }`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </button>
+
+    {isOpen && (
+      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-[60] max-h-[40vh] overflow-y-auto">
+        {options.map((option, index) => (
+          <button
+            type="button"
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(option);
+              toggle(e);
+            }}
+            className={`block w-full text-left px-3 py-2 text-xs sm:text-sm md:text-base transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 ${
+              selected === option
+                ? "bg-blue-100 text-blue-600 font-medium"
+                : "text-gray-800"
+            }`}
+            disabled={disabled}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -38,9 +103,9 @@ const Profile = () => {
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [updateError, setUpdateError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const fileInputRef = useRef(null);
-  const [profileImageUrl, setProfileImageUrl] = useState("/users/profile-picture.png");
+  const [profileImageUrl, setProfileImageUrl] = useState(
+    "/users/profile-picture.png"
+  );
   const [formData, setFormData] = useState({
     username: "",
     phone: "",
@@ -49,11 +114,26 @@ const Profile = () => {
     country: "",
     city: "",
   });
+  const [reviews, setReviews] = useState([]);
+  const fileInputRef = useRef(null);
   const logoutDialogRef = useRef(null);
+  const countryDropdownRef = useRef(null);
+  const provinceDropdownRef = useRef(null);
+  const cityDropdownRef = useRef(null);
 
-  // Fetch user data when component mounts
+  // Fetch user data and reviews when component mounts
   useEffect(() => {
-    fetchUserData();
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        await Promise.all([fetchUserData(), fetchUserReviews()]);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   // Reset status messages after 3 seconds
@@ -69,26 +149,19 @@ const Profile = () => {
 
   const fetchUserData = async () => {
     try {
-      setIsLoading(true);
-      // Get token from local storage
       const token = localStorage.getItem("auth_header");
-      
-      // Set up headers with the auth token
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         withCredentials: true,
       };
-      
-      // Make API call to get user data
-      const response = await axios.get("http://localhost:8000/api/auth/validate-token", config);
-      
-      // Check if the response contains user data
+      const response = await axios.get(
+        "http://localhost:8000/api/auth/validate-token",
+        config
+      );
       if (response.data && response.data.user) {
         const user = response.data.user;
-        
-        // Update form data with user info
         setFormData({
           username: user.name || "",
           phone: user.number || "",
@@ -97,29 +170,86 @@ const Profile = () => {
           country: user.country || "",
           city: user.city || "",
         });
-
-        // Set profile image if available
         if (user.profile_image) {
           setProfileImageUrl(user.profile_image);
         }
       }
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-      // If unauthorized, redirect to login
       if (error.response && error.response.status === 401) {
         navigate("/login");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const prevReview = () => {
+  const fetchUserReviews = async () => {
+    try {
+      const token = localStorage.getItem("auth_header");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      };
+      const response = await axios.get(
+        "http://localhost:8000/api/reviews/user",
+        config
+      );
+      if (response.data) {
+        const reviewsWithImages = await Promise.all(
+          response.data.map(async (review) => {
+            try {
+              const placeResponse = await axios.get(
+                `http://localhost:8000/api/places/${review.place_id}`,
+                config
+              );
+              return {
+                ...review,
+                images: placeResponse.data.images || [
+                  "/images/placeholder.jpg",
+                ],
+              };
+            } catch (error) {
+              console.error(
+                `Failed to fetch images for place ${review.place_id}:`,
+                error
+              );
+              return {
+                ...review,
+                images: ["/images/placeholder.jpg"],
+              };
+            }
+          })
+        );
+        setReviews(reviewsWithImages);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user reviews:", error);
+      if (error.response && error.response.status === 401) {
+        navigate("/login");
+      }
+    }
+  };
+
+  const prevReview = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
   };
 
-  const nextReview = () => {
+  const nextReview = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleCardClick = (review) => {
+    const selectedPlace = {
+      id: review.place_id,
+      name: review.title,
+      address: review.address,
+      facilities: review.facilities,
+      images: review.images,
+    };
+    navigate("/place-detail", { state: { selectedPlace } });
   };
 
   const handleProfileEdit = () => {
@@ -130,33 +260,33 @@ const Profile = () => {
     try {
       setIsSaving(true);
       setUpdateError(null);
-      
-      // Form validation
+
+      // Validate profile data
       if (!formData.username.trim()) {
         setUpdateError("Nama pengguna tidak boleh kosong");
         setIsSaving(false);
         return;
       }
-      
       if (!formData.phone.trim()) {
         setUpdateError("Nomor telepon tidak boleh kosong");
         setIsSaving(false);
         return;
       }
-      
-      // Get token from local storage
+      if (!formData.country || !formData.province || !formData.city) {
+        setUpdateError("Negara, Provinsi, dan Kota harus diisi");
+        setIsSaving(false);
+        return;
+      }
+
       const token = localStorage.getItem("auth_header");
-      
-      // Set up headers with the auth token
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
         },
         withCredentials: true,
       };
-      
-      // Prepare the data to update
+
+      // Prepare profile data
       const updateData = {
         name: formData.username,
         number: formData.phone,
@@ -165,65 +295,95 @@ const Profile = () => {
         country: formData.country,
         city: formData.city,
       };
-      
-      // Make API call to update user data
-      const response = await axios.put("http://localhost:8000/api/auth/update", updateData, config);
-      
-      // Check if update was successful
-      if (response.data && response.data.success) {
-        // Exit edit mode
+
+      // Update profile data
+      const profileResponse = await axios.put(
+        "http://localhost:8000/api/auth/update",
+        updateData,
+        {
+          ...config,
+          headers: {
+            ...config.headers,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Handle profile image upload if selected
+      if (selectedImage) {
+        if (selectedImage.size > 5 * 1024 * 1024) {
+          setUpdateError("Ukuran gambar tidak boleh lebih dari 5MB");
+          setIsSaving(false);
+          return;
+        }
+        if (
+          !["image/jpeg", "image/png", "image/jpg"].includes(selectedImage.type)
+        ) {
+          setUpdateError(
+            "Format gambar tidak valid. Gunakan jpeg, png, atau jpg"
+          );
+          setIsSaving(false);
+          return;
+        }
+
+        const imageFormData = new FormData();
+        imageFormData.append("profile_image", selectedImage);
+
+        const imageResponse = await axios.post(
+          "http://localhost:8000/api/auth/update-profile-image",
+          imageFormData,
+          {
+            ...config,
+            headers: {
+              ...config.headers,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (imageResponse.data && imageResponse.data.success) {
+          setProfileImageUrl(imageResponse.data.profile_image);
+        } else {
+          setUpdateError("Gagal mengunggah gambar profil");
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      if (profileResponse.data && profileResponse.data.success) {
         setIsEditMode(false);
-        
-        // Show success message
         setUpdateSuccess(true);
-        
-        // Refresh user data to make sure we have the latest
+        setSelectedImage(null);
         fetchUserData();
       } else {
         setUpdateError("Gagal memperbarui profil. Silakan coba lagi.");
       }
     } catch (error) {
       console.error("Failed to update profile:", error);
-      setUpdateError(error.response?.data?.message || "Gagal memperbarui profil. Silakan coba lagi.");
+      setUpdateError(
+        error.response?.data?.message ||
+          "Gagal memperbarui profil. Silakan coba lagi."
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancelEdit = () => {
-    // Reset form data to original values by refetching
     fetchUserData();
-    // Exit edit mode
     setIsEditMode(false);
-    // Clear selected image if any
     setSelectedImage(null);
+    setProfileImageUrl(formData.profile_image || "/users/profile-picture.png");
   };
 
   const handleChangeProfilePicture = () => {
-    // Trigger file input click
     fileInputRef.current.click();
   };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setUpdateError("Ukuran gambar tidak boleh lebih dari 5MB");
-        return;
-      }
-
-      // Validate file type
-      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-        setUpdateError("Format gambar tidak valid. Gunakan jpeg, png, atau jpg");
-        return;
-      }
-
-      // Set selected image
       setSelectedImage(file);
-      
-      // Create a preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImageUrl(e.target.result);
@@ -232,63 +392,9 @@ const Profile = () => {
     }
   };
 
-  const handleUploadProfileImage = async () => {
-    if (!selectedImage) {
-      setUpdateError("Pilih gambar terlebih dahulu");
-      return;
-    }
-
-    try {
-      setIsUploadingImage(true);
-      setUpdateError(null);
-
-      // Get token from local storage
-      const token = localStorage.getItem("auth_header");
-      
-      // Set up form data
-      const formData = new FormData();
-      formData.append('profile_image', selectedImage);
-      
-      // Set up headers with the auth token
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        },
-        withCredentials: true,
-      };
-      
-      // Make API call to upload image
-      const response = await axios.post(
-        "http://localhost:8000/api/auth/update-profile-image",
-        formData,
-        config
-      );
-      
-      if (response.data && response.data.success) {
-        // Update profile image URL with the one from server
-        setProfileImageUrl(response.data.profile_image);
-        
-        // Show success message
-        setUpdateSuccess(true);
-        
-        // Clear selected image
-        setSelectedImage(null);
-      } else {
-        setUpdateError("Gagal mengunggah gambar profil");
-      }
-    } catch (error) {
-      console.error("Failed to upload profile image:", error);
-      setUpdateError(error.response?.data?.message || "Gagal mengunggah gambar profil");
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
@@ -304,28 +410,101 @@ const Profile = () => {
     navigate("/login");
   };
 
+  // Dropdown state management
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [provinceDropdownOpen, setProvinceDropdownOpen] = useState(false);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+
+  const toggleCountryDropdown = useCallback((e) => {
+    e.stopPropagation();
+    setCountryDropdownOpen((prev) => !prev);
+    setProvinceDropdownOpen(false);
+    setCityDropdownOpen(false);
+  }, []);
+
+  const toggleProvinceDropdown = useCallback((e) => {
+    e.stopPropagation();
+    setProvinceDropdownOpen((prev) => !prev);
+    setCountryDropdownOpen(false);
+    setCityDropdownOpen(false);
+  }, []);
+
+  const toggleCityDropdown = useCallback((e) => {
+    e.stopPropagation();
+    setCityDropdownOpen((prev) => !prev);
+    setCountryDropdownOpen(false);
+    setProvinceDropdownOpen(false);
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        countryDropdownRef.current &&
+        !countryDropdownRef.current.contains(event.target)
+      ) {
+        setCountryDropdownOpen(false);
+      }
+      if (
+        provinceDropdownRef.current &&
+        !provinceDropdownRef.current.contains(event.target)
+      ) {
+        setProvinceDropdownOpen(false);
+      }
+      if (
+        cityDropdownRef.current &&
+        !cityDropdownRef.current.contains(event.target)
+      ) {
+        setCityDropdownOpen(false);
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeout);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
   if (isLoading) {
-    return (
-      <div className="h-screen flex justify-center items-center bg-[#F5F6FA]">
-        <div className="text-lg text-[#3C91E6]">Loading...</div>
-      </div>
-    );
+    return <LoadingIndicator />; // Replaced CustomLoader with LoadingIndicator
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden pt-10">
+    <div className="min-h-screen flex flex-col bg-[#F5F6FA] pt-12 sm:pt-16">
       <NavbarBack title="Profile" showAvatar={true} />
 
       {/* Status Messages */}
       {updateSuccess && (
-        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md transition-opacity">
-          Profil berhasil diperbarui!
+        <div className="fixed top-[10vh] left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 z-50 max-w-md">
+          <CustomNotification
+            title="Sukses"
+            type="success"
+            onClose={() => setUpdateSuccess(false)}
+          >
+            Profil berhasil diperbarui!
+          </CustomNotification>
         </div>
       )}
-      
       {updateError && (
-        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md transition-opacity">
-          {updateError}
+        <div className="fixed top-[10vh] left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 z-50 max-w-md">
+          <CustomNotification
+            title="Error"
+            type="error"
+            onClose={() => setUpdateError(null)}
+          >
+            {updateError}
+          </CustomNotification>
+        </div>
+      )}
+      {isSaving && (
+        <div className="fixed top-[10vh] left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 z-50 max-w-md">
+          <CustomNotification title="Menyimpan" type="loading">
+            Sedang memperbarui profil...
+          </CustomNotification>
         </div>
       )}
 
@@ -339,181 +518,183 @@ const Profile = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 bg-white p-4 lg:p-15 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-15 w-full">
         {/* Left Card */}
-        <div className="w-full lg:w-[380px] bg-[#3C91E6] rounded-2xl p-4 lg:p-6 text-center text-white shadow-md flex flex-col">
-          <h2 className="text-xl lg:text-2xl font-semibold mb-3 lg:mb-4">
+        <div className="w-full lg:w-96 bg-[#3C91E6] rounded-2xl p-4 sm:p-6 text-center text-white shadow-md flex flex-col">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4">
             Profile Pengguna
           </h2>
 
           {/* Foto Profil */}
-          <div className="flex justify-center mb-3 lg:mb-4 relative">
+          <div className="flex justify-center mb-3 sm:mb-4 relative">
             <img
               src={profileImageUrl}
               alt="Profile"
-              className="w-24 h-24 lg:w-36 lg:h-36 rounded-full object-cover border-2 border-white"
+              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full object-cover border-2 border-white"
             />
-            {selectedImage && (
-              <div className="absolute bottom-1 lg:bottom-2 right-1/3 lg:right-1/3">
-                <button
-                  onClick={handleUploadProfileImage}
-                  disabled={isUploadingImage}
-                  className="bg-green-500 hover:bg-green-600 text-white text-xs rounded-full p-1 shadow"
-                >
-                  {isUploadingImage ? (
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            )}
           </div>
-          <h2 className="text-lg lg:text-xl font-bold">{formData.username}</h2>
-          <p className="text-xs lg:text-sm mt-1">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold truncate">
+            {formData.username}
+          </h2>
+          <p className="text-xs sm:text-sm mt-1 truncate">
             {formData.city}, {formData.province}
           </p>
 
           {/* Ulasan Terbaru */}
-          <div className="mt-3 lg:mt-10 flex-1 flex flex-col max-h-[160px]">
-            <h3 className="text-sm lg:text-base font-semibold mb-2 lg:mb-3">
+          <div className="mt-3 sm:mt-10 flex-1 flex flex-col">
+            <h3 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3">
               Ulasan Terbaru
             </h3>
-            <div className="flex justify-center items-center gap-2 lg:gap-3">
-              <button
-                onClick={prevReview}
-                className="text-white text-xl lg:text-2xl hover:text-gray-300"
-              >
-                ‹
-              </button>
+            {reviews.length === 0 ? (
+              <p className="text-xs sm:text-sm text-gray-200">
+                Belum ada ulasan
+              </p>
+            ) : (
+              <div className="flex justify-center items-center gap-2 sm:gap-3">
+                <button
+                  onClick={prevReview}
+                  className="text-white text-lg sm:text-xl md:text-2xl hover:text-gray-300 cursor-pointer p-2"
+                  disabled={reviews.length <= 1}
+                >
+                  ‹
+                </button>
 
-              {/* Review Card Container */}
-              <div className="relative w-[180px] h-[160px] lg:w-[200px] lg:h-[100px] overflow-hidden">
-                {reviews.map((review, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-500 ease-in-out
-                      ${
-                        index === currentIndex
-                          ? "opacity-100"
-                          : "opacity-0 pointer-events-none"
-                      }
-                    `}
-                  >
-                    <div className="h-full w-full flex justify-center">
-                      <div className="w-full max-w-[200px] bg-white rounded-lg shadow-md flex flex-col overflow-hidden">
-                        {/* Content: Padded, full rounded corners */}
-                        <div className="p-2 bg-white rounded-lg flex-1 flex flex-col text-left">
-                          <div>
-                            <h4 className="text-xs lg:text-sm font-bold text-gray-800 truncate">
-                              {review.title}
-                            </h4>
-                            <p className="text-[10px] lg:text-xs text-gray-600 truncate">
-                              {review.address}
-                            </p>
-                          </div>
+                <div className="relative w-full max-w-[180px] sm:max-w-[220px] md:max-w-[240px] h-25 sm:h-40 md:h-30 overflow-hidden">
+                  {reviews.map((review, index) => (
+                    <div
+                      key={review.place_id}
+                      className={`absolute inset-0 transition-opacity duration-500 ease-in-out
+                        ${
+                          index === currentIndex
+                            ? "opacity-100"
+                            : "opacity-0 pointer-events-none"
+                        }
+                      `}
+                    >
+                      <div
+                        className="h-full w-full flex justify-center cursor-pointer"
+                        onClick={() => handleCardClick(review)}
+                      >
+                        <div className="w-full bg-white rounded-lg shadow-md flex flex-col overflow-hidden">
+                          <div className="p-2 sm:p-3 bg-white rounded-lg flex-1 flex flex-col text-left hover:bg-gray-100 transition-colors">
+                            <div>
+                              <h4 className="text-xs sm:text-sm font-bold text-gray-800 truncate">
+                                {review.title}
+                              </h4>
+                              <p className="text-[10px] sm:text-xs text-gray-600 truncate">
+                                {review.address}
+                              </p>
+                            </div>
 
-                          <div className="flex items-center mt-1 gap-2">
-                            <span className="text-xs lg:text-sm font-bold text-gray-800">
-                              {review.rating}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <img
-                                  key={i}
-                                  src="/icons/star-filled.png"
-                                  alt="Star"
-                                  className={`w-2 h-2 lg:w-2.5 lg:h-2.5 ${
-                                    i < Math.floor(review.rating)
-                                      ? ""
-                                      : "filter grayscale"
-                                  }`}
-                                />
+                            <div className="flex items-center mt-1 sm:mt-2 gap-1 sm:gap-2">
+                              <span className="text-xs sm:text-sm font-bold text-gray-800">
+                                {parseFloat(review.rating || 0).toFixed(1)}
+                              </span>
+                              <div className="flex items-center gap-0.5 sm:gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <img
+                                    key={i}
+                                    src="/icons/star-filled.png"
+                                    alt="Star"
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 ${
+                                      i <
+                                      Math.floor(parseFloat(review.rating || 0))
+                                        ? ""
+                                        : "filter grayscale"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="mt-1 sm:mt-2 flex flex-nowrap gap-0.5 sm:gap-1 overflow-hidden">
+                              {review.facilities.map((facilityId) => (
+                                <div
+                                  key={facilityId}
+                                  className="w-5 h-5 sm:w-6 sm:h-6 bg-[#74B5F5] rounded p-0.5 sm:p-1 flex items-center justify-center"
+                                >
+                                  <img
+                                    src={`/icons/${facilityIconMap[facilityId]}.png`}
+                                    alt={facilityIconMap[facilityId]}
+                                    className="w-3 h-3 sm:w-4 sm:h-4 object-contain"
+                                  />
+                                </div>
                               ))}
                             </div>
-                          </div>
-
-                          {/* Features: icons */}
-                          <div className="mt-1 flex flex-nowrap gap-0.5 lg:gap-1 overflow-hidden">
-                            {review.features.map((icon, i) => (
-                              <div
-                                key={i}
-                                className="w-5 h-5 lg:w-5 lg:h-5 bg-[#74B5F5] rounded p-1 lg:p-1 flex items-center justify-center"
-                              >
-                                <img
-                                  src={`/icons/${icon}.png`}
-                                  alt={icon}
-                                  className="w-4 h-4 lg:w-5 lg:h-5 object-contain"
-                                />
-                              </div>
-                            ))}
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              <button
-                onClick={nextReview}
-                className="text-white text-2xl lg:text-2xl hover:text-gray-300"
-              >
-                ›
-              </button>
-            </div>
+                <button
+                  onClick={nextReview}
+                  className="text-white text-lg sm:text-xl md:text-2xl hover:text-gray-300 cursor-pointer p-2"
+                  disabled={reviews.length <= 1}
+                >
+                  ›
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Kontak */}
-          <div className="mt-3 lg:mt-4">
-            <h3 className="text-sm lg:text-base font-semibold mb-2 text-white">
+          <div className="mt-3 sm:mt-4">
+            <h3 className="text-sm sm:text-base font-semibold mb-2 text-white">
               Kontak
             </h3>
-            <div className="flex justify-center gap-2 lg:gap-3">
-              <button className="bg-white p-1.5 lg:p-2 rounded-full text-blue-500 flex items-center justify-center">
+            <div className="flex justify-center gap-2 sm:gap-3">
+              <button className="bg-white p-1.5 sm:p-2 rounded-full text-blue-500 flex items-center justify-center">
                 <img
                   src="/icons/email-icon.png"
                   alt="Email"
-                  className="w-4 h-4 lg:w-5 lg:h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                 />
               </button>
-              <button className="bg-white p-1.5 lg:p-2 rounded-full text-blue-500 flex items-center justify-center">
+              <button className="bg-white p-1.5 sm:p-2 rounded-full text-blue-500 flex items-center justify-center">
                 <img
                   src="/icons/phone-icon.png"
                   alt="Phone"
-                  className="w-4 h-4 lg:w-5 lg:h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                 />
               </button>
+            </div>
           </div>
         </div>
 
         {/* Right Form */}
-        <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-4 lg:p-6 shadow-md flex flex-col">
-          <div className="-mx-4 lg:-mx-6">
-            <h2 className="text-xl lg:text-2xl font-semibold mb-3 lg:mb-4 border-b-2 pb-2 border-blue-300 px-4 lg:px-6">
+        <div className="flex-1 bg-[#EFF0F7] rounded-2xl p-4 sm:p-6 shadow-md flex flex-col">
+          <div className="-mx-4 sm:-mx-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 border-b-2 pb-2 border-blue-300 px-4 sm:px-6">
               {isEditMode ? "Edit Profile" : "Data Profile"}
             </h2>
           </div>
 
-          <form className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 flex-1 overflow-auto" onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }}>
+          <form
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveProfile();
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Left Column */}
-            <div className="space-y-4 lg:space-y-12 p-4 lg:p-8">
+            <div className="space-y-4 sm:space-y-10 p-3 sm:p-4 mt-5">
               <div>
-                <label className="text-sm lg:text-base font-semibold">
+                <label className="text-xs sm:text-sm md:text-base font-semibold">
                   Nama Pengguna
                 </label>
                 <input
                   type="text"
                   name="username"
                   value={formData.username}
-                  onChange={handleInputChange}
-                  className={`w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-sm lg:text-base rounded-xl shadow-md border ${
-                    isEditMode ? "border-blue-400 focus:ring-2 focus:ring-blue-400" : "border-gray-300"
+                  onChange={(e) =>
+                    handleInputChange(e.target.name, e.target.value)
+                  }
+                  className={`w-full h-10 sm:h-11 md:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-xs sm:text-sm md:text-base rounded-xl shadow-md border ${
+                    isEditMode
+                      ? "border-blue-400 focus:ring-2 focus:ring-blue-400"
+                      : "border-gray-300"
                   } focus:outline-none ${isEditMode ? "" : "bg-gray-50"}`}
                   readOnly={!isEditMode}
                   disabled={isSaving}
@@ -521,16 +702,20 @@ const Profile = () => {
                 />
               </div>
               <div>
-                <label className="text-sm lg:text-base font-semibold">
+                <label className="text-xs sm:text-sm md:text-base font-semibold">
                   Nomor Telepon
                 </label>
                 <input
                   type="text"
                   name="phone"
                   value={formData.phone}
-                  onChange={handleInputChange}
-                  className={`w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-sm lg:text-base rounded-xl shadow-md border ${
-                    isEditMode ? "border-blue-400 focus:ring-2 focus:ring-blue-400" : "border-gray-300"
+                  onChange={(e) =>
+                    handleInputChange(e.target.name, e.target.value)
+                  }
+                  className={`w-full h-10 sm:h-11 md:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-xs sm:text-sm md:text-base rounded-xl shadow-md border ${
+                    isEditMode
+                      ? "border-blue-400 focus:ring-2 focus:ring-blue-400"
+                      : "border-gray-300"
                   } focus:outline-none ${isEditMode ? "" : "bg-gray-50"}`}
                   readOnly={!isEditMode}
                   disabled={isSaving}
@@ -538,41 +723,26 @@ const Profile = () => {
                 />
               </div>
               <div>
-                <label className="text-sm lg:text-base font-semibold">
+                <label className="text-xs sm:text-sm md:text-base font-semibold">
                   Provinsi
                 </label>
                 {isEditMode ? (
-                  <div className="relative">
-                    <select
-                      name="province"
-                      value={formData.province}
-                      onChange={handleInputChange}
-                      className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
-                      disabled={isSaving}
-                      required
-                    >
-                      <option value="">Pilih Provinsi</option>
-                      {provinces.map((prov) => (
-                        <option
-                          key={prov}
-                          value={prov}
-                          className="text-gray-800 text-sm lg:text-base bg-white hover:bg-gray-100"
-                        >
-                          {prov}
-                        </option>
-                      ))}
-                    </select>
-                    <img
-                      src="/icons/droparrow_icon.png"
-                      alt="Dropdown Arrow"
-                      className="absolute right-5 top-1/2 transform w-4 h-4 lg:w-3 lg:h-2 pointer-events-none"
-                    />
-                  </div>
+                  <ProfileDropdown
+                    className="province-dropdown mt-1"
+                    isOpen={provinceDropdownOpen}
+                    toggle={toggleProvinceDropdown}
+                    selected={formData.province}
+                    options={provinces}
+                    onSelect={(value) => handleInputChange("province", value)}
+                    placeholder="Pilih Provinsi"
+                    disabled={isSaving}
+                    dropdownRef={provinceDropdownRef}
+                  />
                 ) : (
                   <input
                     type="text"
                     value={formData.province}
-                    className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
+                    className="w-full h-10 sm:h-11 md:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-xs sm:text-sm md:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
                     readOnly
                   />
                 )}
@@ -580,96 +750,66 @@ const Profile = () => {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-10 lg:space-y-12 p-4 lg:p-8">
+            <div className="space-y-4 sm:space-y-10 p-3 sm:p-4 mt-5">
               <div>
-                <label className="text-sm lg:text-base font-semibold">
+                <label className="text-xs sm:text-sm md:text-base font-semibold">
                   Alamat Email
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
-                  className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
-                  readOnly={true} // Email should not be editable
+                  className="w-full h-10 sm:h-11 md:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-xs sm:text-sm md:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
+                  readOnly={true}
                   disabled={true}
                 />
               </div>
               <div>
-                <label className="text-sm lg:text-base font-semibold">
+                <label className="text-xs sm:text-sm md:text-base font-semibold">
                   Negara
                 </label>
                 {isEditMode ? (
-                  <div className="relative">
-                    <select
-                      name="country"
-                      value={formData.country}
-                      onChange={handleInputChange}
-                      className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
-                      disabled={isSaving}
-                      required
-                    >
-                      <option value="">Pilih Negara</option>
-                      {countries.map((country) => (
-                        <option
-                          key={country}
-                          value={country}
-                          className="text-gray-800 text-sm lg:text-base bg-white hover:bg-gray-100"
-                        >
-                          {country}
-                        </option>
-                      ))}
-                    </select>
-                    <img
-                      src="/icons/droparrow_icon.png"
-                      alt="Dropdown Arrow"
-                      className="absolute right-5 top-1/2 transform w-4 h-4 lg:w-3 lg:h-2 pointer-events-none"
-                    />
-                  </div>
+                  <ProfileDropdown
+                    className="country-dropdown mt-1"
+                    isOpen={countryDropdownOpen}
+                    toggle={toggleCountryDropdown}
+                    selected={formData.country}
+                    options={countries}
+                    onSelect={(value) => handleInputChange("country", value)}
+                    placeholder="Pilih Negara"
+                    disabled={isSaving}
+                    dropdownRef={countryDropdownRef}
+                  />
                 ) : (
                   <input
                     type="text"
                     value={formData.country}
-                    className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
+                    className="w-full h-10 sm:h-11 md:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-xs sm:text-sm md:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
                     readOnly
                   />
                 )}
               </div>
               <div>
-                <label className="text-sm lg:text-base font-semibold">
+                <label className="text-xs sm:text-sm md:text-base font-semibold">
                   Kota/Kabupaten
                 </label>
                 {isEditMode ? (
-                  <div className="relative">
-                    <select
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-white text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
-                      disabled={isSaving}
-                      required
-                    >
-                      <option value="">Pilih Kota</option>
-                      {cities.map((city) => (
-                        <option
-                          key={city}
-                          value={city}
-                          className="text-gray-800 text-sm lg:text-base bg-white hover:bg-gray-100"
-                        >
-                          {city}
-                        </option>
-                      ))}
-                    </select>
-                    <img
-                      src="/icons/droparrow_icon.png"
-                      alt="Dropdown Arrow"
-                      className="absolute right-5 top-1/2 transform w-4 h-4 lg:w-3 lg:h-2 pointer-events-none"
-                    />
-                  </div>
+                  <ProfileDropdown
+                    className="city-dropdown mt-1"
+                    isOpen={cityDropdownOpen}
+                    toggle={toggleCityDropdown}
+                    selected={formData.city}
+                    options={cities}
+                    onSelect={(value) => handleInputChange("city", value)}
+                    placeholder="Pilih Kota"
+                    disabled={isSaving}
+                    dropdownRef={cityDropdownRef}
+                  />
                 ) : (
                   <input
                     type="text"
                     value={formData.city}
-                    className="w-full h-10 lg:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-sm lg:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
+                    className="w-full h-10 sm:h-11 md:h-12 px-3 py-2 mt-1 bg-gray-50 text-gray-800 text-xs sm:text-sm md:text-base rounded-xl shadow-md border border-gray-300 focus:outline-none"
                     readOnly
                   />
                 )}
@@ -678,14 +818,14 @@ const Profile = () => {
           </form>
 
           {/* Buttons */}
-          <div className="mt-3 lg:mt-4 pr-4 lg:pr-8 mb-5">
-            <div className="flex justify-end gap-4 lg:gap-6">
+          <div className="mt-4 sm:mt-6 px-3 sm:px-4">
+            <div className="flex justify-end gap-3 sm:gap-4">
               {isEditMode ? (
                 <>
                   <button
                     onClick={handleCancelEdit}
                     type="button"
-                    className="bg-gray-400 text-white px-3 py-1.5 lg:px-8 lg:py-2 text-sm lg:text-base rounded-md hover:bg-gray-500 transition"
+                    className="bg-gray-400 text-white font-medium px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm rounded-md hover:bg-gray-500 transition cursor-pointer"
                     disabled={isSaving}
                   >
                     Batal
@@ -693,24 +833,18 @@ const Profile = () => {
                   <button
                     onClick={handleChangeProfilePicture}
                     type="button"
-                    className="bg-[#3C91E6] text-white px-3 py-1.5 lg:px-6 lg:py-2 text-sm lg:text-base rounded-md hover:bg-blue-500 transition"
+                    className="bg-[#3C91E6] text-white font-medium px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm rounded-md hover:bg-blue-500 transition cursor-pointer"
                     disabled={isSaving}
                   >
-                    Ganti Foto Profile
+                    Ganti Foto Profil
                   </button>
                   <button
                     onClick={handleSaveProfile}
-                    className="bg-[#019D00] text-white px-3 py-1.5 lg:px-14 lg:py-2 text-sm lg:text-base rounded-md hover:bg-green-700 transition flex items-center justify-center"
+                    type="button"
+                    className="bg-[#019D00] text-white font-medium px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm rounded-md hover:bg-green-700 transition cursor-pointer"
                     disabled={isSaving}
                   >
-                    {isSaving ? (
-                      <span className="flex items-center">
-                        <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Menyimpan...
-                      </span>
-                    ) : (
-                      "Perbarui"
-                    )}
+                    Perbarui
                   </button>
                 </>
               ) : (
@@ -718,13 +852,14 @@ const Profile = () => {
                   <button
                     onClick={handleLogoutClick}
                     type="button"
-                    className="bg-[#E63C3C] text-white px-3 py-1.5 lg:px-10 lg:py-2 text-sm lg:text-base rounded-md hover:bg-[#E63000] transition"
+                    className="bg-[#E63C3C] text-white font-medium px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm rounded-md hover:bg-[#E63000] transition cursor-pointer"
                   >
                     Logout
                   </button>
                   <button
                     onClick={handleProfileEdit}
-                    className="bg-[#3C91E6] text-white px-3 py-1.5 lg:px-8 lg:py-2 text-sm lg:text-base rounded-md hover:bg-blue-500 transition"
+                    type="button"
+                    className="bg-[#3C91E6] text-white font-medium px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm rounded-md hover:bg-blue-500 transition cursor-pointer"
                   >
                     Edit Profile
                   </button>
@@ -732,17 +867,22 @@ const Profile = () => {
               )}
             </div>
           </div>
-        </div>
 
-        {showLogoutDialog && (
-          <LogoutDialog
-            ref={logoutDialogRef}
-            onConfirm={handleConfirmLogout}
-            onCancel={handleCancelLogout}
-          />
-        )}
+          {showLogoutDialog && (
+            <ConfirmDialog
+              ref={logoutDialogRef}
+              isOpen={showLogoutDialog}
+              onConfirm={handleConfirmLogout}
+              onCancel={handleCancelLogout}
+              message="Apakah Anda yakin ingin keluar dari akun?"
+              confirmLabel="Keluar"
+              cancelLabel="Batal"
+              confirmColor="text-red-500"
+              cancelColor="text-[#3C91E6]"
+            />
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );
 };

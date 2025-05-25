@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // Use @hello-pangea/dnd
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Rating from "../components/Rating";
 import Facilities from "../components/Facilities";
 import Review from "../components/Review";
 import FACILITIES from "../constants/facilities";
 import NavbarBack from "../components/NavbarBack";
 import axios from "axios";
+import CustomNotification from "../components/CustomNotification";
 
 const AddPlace = () => {
   const location = useLocation();
@@ -26,6 +27,7 @@ const AddPlace = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [uploadError, setUploadError] = useState("");
+  const [notification, setNotification] = useState({ show: false, type: "", title: "", message: "" });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -112,14 +114,12 @@ const AddPlace = () => {
     setPreviewUrls(updatedPreviews);
   };
 
-  // Handle drag-and-drop reordering
   const handleDragEnd = (result) => {
-    if (!result.destination) return; // Dropped outside the list
+    if (!result.destination) return;
 
     const reorderedFotos = [...formData.fotos];
     const reorderedPreviews = [...previewUrls];
 
-    // Reorder both fotos and previews
     const [removedFoto] = reorderedFotos.splice(result.source.index, 1);
     const [removedPreview] = reorderedPreviews.splice(result.source.index, 1);
 
@@ -137,7 +137,9 @@ const AddPlace = () => {
     e.preventDefault();
 
     if (!position) {
-      setUploadError("Posisi tidak tersedia. Silakan pilih lokasi pada peta terlebih dahulu.");
+      setUploadError(
+        "Posisi tidak tersedia. Silakan pilih lokasi pada peta terlebih dahulu."
+      );
       return;
     }
 
@@ -147,9 +149,16 @@ const AddPlace = () => {
     }
 
     setIsLoading(true);
+    setUploadError("");
+    setNotification({
+      show: true,
+      type: "loading",
+      title: "Mengirim Data...",
+      message: "Mohon tunggu, tempat sedang disubmit",
+    });
 
     try {
-      const token = localStorage.getItem('auth_header'); // Get stored token
+      const token = localStorage.getItem("auth_header");
       const formDataObj = new FormData();
       formDataObj.append("name", formData.namaTempat);
       formDataObj.append("address", formData.detailAlamat);
@@ -159,35 +168,58 @@ const AddPlace = () => {
       formDataObj.append("rating", formData.rating);
 
       if (formData.selectedFacilities.length > 0) {
-        formDataObj.append("facilities", JSON.stringify(formData.selectedFacilities));
+        formDataObj.append(
+          "facilities",
+          JSON.stringify(formData.selectedFacilities)
+        );
       }
 
-      // Append images in the current order
       formData.fotos.forEach((foto) => {
         formDataObj.append("images[]", foto);
       });
 
-      const response = await axios.post("http://localhost:8000/api/places", formDataObj, {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}` 
-        },
-        withCredentials: true,
-      });
+      const response = await axios.post(
+        "http://localhost:8000/api/places",
+        formDataObj,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
 
       if (response.status === 200 || response.status === 201) {
-        navigate("/dashboard");
+        setNotification({
+          show: true,
+          type: "success",
+          title: "Tempat Berhasil Disubmit!",
+          message: "Tempat berhasil disubmit dan menunggu persetujuan admin.",
+        });
+
+        setTimeout(() => {
+          setNotification({ show: false, type: "", title: "", message: "" });
+          navigate("/dashboard");
+        }, 3000);
       } else {
-        setUploadError(response.data.message || "Terjadi kesalahan saat menyimpan data");
+        setUploadError(
+          response.data.message || "Terjadi kesalahan saat menyimpan data"
+        );
+        setNotification({ show: false, type: "", title: "", message: "" });
       }
     } catch (error) {
+      setNotification({ show: false, type: "", title: "", message: "" });
       if (error.response && error.response.status === 422) {
         const validationErrors = error.response.data.errors;
         const firstError = Object.values(validationErrors)[0][0];
         setUploadError(firstError || "Data tidak valid");
       } else {
-        setUploadError(error.response?.data?.error || "Terjadi kesalahan saat menghubungi server");
+        setUploadError(
+          error.response?.data?.error ||
+            "Terjadi kesalahan saat menghubungi server"
+        );
       }
     } finally {
       setIsLoading(false);
@@ -200,12 +232,33 @@ const AddPlace = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 pt-20">
       <NavbarBack title="Tambah Tempat" showAvatar={false} />
 
+      {/* Notification - Loading or Success */}
+      {notification.show && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <CustomNotification
+            title={notification.title}
+            type={notification.type}
+            onClose={() =>
+              setNotification({ show: false, type: "", title: "", message: "" })
+            }
+          >
+            {notification.message}
+          </CustomNotification>
+        </div>
+      )}
+
       <div className="container mx-auto max-w-lg px-4 py-6">
         <h1 className="text-2xl font-bold text-center mb-6">Masukkan Tempat</h1>
 
         {!position && (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
             <p>Silakan pilih lokasi pada peta terlebih dahulu</p>
+          </div>
+        )}
+
+        {uploadError && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+            <p>{uploadError}</p>
           </div>
         )}
 
@@ -237,9 +290,13 @@ const AddPlace = () => {
                 type="button"
                 onClick={() => document.getElementById("fotoUpload").click()}
                 className="bg-[#3C91E6] hover:bg-[#3c80e6] text-white rounded-lg p-3 flex-1 flex justify-center items-center"
-                disabled={formData.fotos.length >= MAX_IMAGES}
+                disabled={formData.fotos.length >= MAX_IMAGES || isLoading}
               >
-                <img src="/icons/sampul.png" alt="Camera Icon" className="mr-2 w-6 h-6" />
+                <img
+                  src="/icons/sampul.png"
+                  alt="Camera Icon"
+                  className="mr-2 w-6 h-6"
+                />
                 Tambah Foto Sampul
               </button>
             </div>
@@ -261,14 +318,8 @@ const AddPlace = () => {
               className="hidden"
               accept="image/*"
               multiple
-              disabled={formData.fotos.length >= MAX_IMAGES}
+              disabled={formData.fotos.length >= MAX_IMAGES || isLoading}
             />
-
-            {uploadError && (
-              <div className="text-red-500 text-sm mt-2 mb-2 text-center">
-                {uploadError}
-              </div>
-            )}
 
             {previewUrls.length > 0 && (
               <DragDropContext onDragEnd={handleDragEnd}>
@@ -330,7 +381,10 @@ const AddPlace = () => {
             </div>
           </div>
 
-          <Rating rating={formData.rating} onRatingChange={handleRatingChange} />
+          <Rating
+            rating={formData.rating}
+            onRatingChange={handleRatingChange}
+          />
           <div className="mb-6 relative left-1/2 -translate-x-1/2 w-full min-w-3xl mx-auto">
             <Facilities
               facilities={FACILITIES}
@@ -356,36 +410,12 @@ const AddPlace = () => {
             type="submit"
             disabled={isLoading || !position}
             className={`${
-              isLoading || !position ? "bg-gray-400" : "bg-[#3C91E6] hover:bg-[#3c80e6]"
-            } text-white rounded p-3 w-1/2 flex justify-center items-center mx-auto`}
+              isLoading || !position
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#3C91E6] hover:bg-[#3c80e6]"
+            } text-white rounded p-3 w-1/2 flex justify-center items-center mx-auto transition-colors`}
           >
-            {isLoading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Mengirim...
-              </>
-            ) : (
-              "Tambahkan Tempat"
-            )}
+            Tambahkan Tempat
           </button>
         </form>
       </div>

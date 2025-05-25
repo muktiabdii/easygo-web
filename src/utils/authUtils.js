@@ -69,37 +69,40 @@ export const initAuth = () => {
 };
 
 // Remove authentication data
+// src/utils/authUtils.js
 export const logout = async () => {
-  try {
-    // API call for logout
-    await api.post('/auth/logout');
-  } catch (error) {
-    console.error('Logout error:', error);
-  } finally {
-    Cookies.remove('auth_session', { path: '/' });
-    Cookies.remove('auth_timestamp', { path: '/' });
-    localStorage.removeItem('auth_header');
-    
-    // Remove authorization header
-    delete api.defaults.headers.common['Authorization'];
-    
-    // Redirect to login page if not already there
-    if (window.location.pathname !== '/login' && 
-        window.location.pathname !== '/' && 
-        window.location.pathname !== '/register-step-one' &&
-        !window.location.pathname.includes('/forgot-password')) {
-      window.location.href = '/login';
+    try {
+        const token = localStorage.getItem('auth_header');
+        if (token) {
+            await api.post('/auth/logout', {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+        }
+    } catch (error) {
+        console.error('Logout error:', error.response?.data || error.message);
+    } finally {
+        Cookies.remove('auth_session', { path: '/' });
+        Cookies.remove('auth_timestamp', { path: '/' });
+        localStorage.removeItem('auth_header');
+        localStorage.removeItem('user_role');
+        delete api.defaults.headers.common['Authorization'];
+        if (window.location.pathname !== '/login' && 
+            window.location.pathname !== '/' && 
+            window.location.pathname !== '/register-step-one' &&
+            !window.location.pathname.includes('/forgot-password')) {
+            window.location.href = '/login';
+        }
     }
-  }
 };
-
 // Response interceptor to handle errors
 api.interceptors.response.use(
   response => {
     return response;
   },
   error => {
-    if (error.response && error.response.status === 401) {
+    if (error.response && error.response.status === 401 && isAuthenticated()) {
       logout();
     }
     return Promise.reject(error);
