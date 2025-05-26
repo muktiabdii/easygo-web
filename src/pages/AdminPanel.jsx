@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import CustomDropdown from "../components/CustomDropdown";
 import DeleteDialog from "../components/DeleteDialog"; // Import the new component
-import { logout } from '../utils/authUtils';
+import { logout } from "../utils/authUtils";
 
 const AdminPanel = () => {
   const [pendingPlaces, setPendingPlaces] = useState([]);
@@ -179,13 +179,20 @@ const AdminPanel = () => {
       if (!token) {
         throw new Error("Authentication token not found");
       }
-      await axios.delete(`http://localhost:8000/api/places/${placeToDelete.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setPendingPlaces(pendingPlaces.filter((place) => place.id !== placeToDelete.id));
-      setFilteredPlaces(filteredPlaces.filter((place) => place.id !== placeToDelete.id));
+      await axios.delete(
+        `http://localhost:8000/api/places/${placeToDelete.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setPendingPlaces(
+        pendingPlaces.filter((place) => place.id !== placeToDelete.id)
+      );
+      setFilteredPlaces(
+        filteredPlaces.filter((place) => place.id !== placeToDelete.id)
+      );
       setIsModalOpen(false);
       setIsConfirmDialogOpen(false);
       setPlaceToDelete(null);
@@ -459,28 +466,28 @@ const AdminPanel = () => {
         {/* Modern Table Card */}
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl overflow-hidden border border-white/20 z-10">
           <div className="overflow-x-auto">
-            <table className="min-w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="bg-[#EFF0F7]">
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm rounded-tl-3xl">
+                  <th className="w-[50px] py-4 px-4 text-center font-semibold text-gray-700 text-sm rounded-tl-3xl">
                     No.
                   </th>
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm">
+                  <th className="w-[200px] py-4 px-4 text-center font-semibold text-gray-700 text-sm">
                     Nama Tempat
                   </th>
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm">
+                  <th className="w-[250px] py-4 px-4 text-center font-semibold text-gray-700 text-sm">
                     Alamat
                   </th>
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm">
+                  <th className="w-[150px] py-4 px-4 text-center font-semibold text-gray-700 text-sm">
                     Tanggal Submit
                   </th>
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm">
+                  <th className="w-[100px] py-4 px-4 text-center font-semibold text-gray-700 text-sm">
                     Rating
                   </th>
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm">
+                  <th className="w-[120px] py-4 px-4 text-center font-semibold text-gray-700 text-sm">
                     Status
                   </th>
-                  <th className="py-4 px-6 text-left font-semibold text-gray-700 text-sm rounded-tr-3xl">
+                  <th className="w-[100px] py-4 px-4 text-center font-semibold text-gray-700 text-sm rounded-tr-3xl">
                     Aksi
                   </th>
                 </tr>
@@ -491,35 +498,37 @@ const AdminPanel = () => {
                     key={place.id}
                     className="hover:bg-gradient-to-r hover:from-[#EFF0F7]/30 hover:to-[#c3c7e2]/30 transition-all duration-300"
                   >
-                    <td className="py-4 px-6 text-sm font-medium text-gray-600">
-                      {startIndex + index + 1}
+                    <td className="py-4 px-4 text-center text-sm font-medium text-gray-600">
+                      <div className="text-center">
+                        {startIndex + index + 1}
+                      </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-sm font-semibold text-gray-800">
+                    <td className="py-4 px-4 text-center">
+                      <div className="text-sm font-semibold text-gray-800 text-left">
                         {place.name}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-sm text-gray-600 max-w-xs truncate">
+                    <td className="py-4 px-4 text-center">
+                      <div className="text-sm text-gray-600 max-w-xs truncate text-left">
                         {place.address}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-sm text-gray-600 bg-[#EFF0F7] px-3 py-1 rounded-xl">
+                    <td className="py-4 px-4 text-center">
+                      <div className="text-sm text-gray-600 bg-[#EFF0F7] px-3 py-1 rounded-xl text-left">
                         {place.created_at.split("T")[0]}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-xl w-fit">
+                    <td className="py-4 px-4 text-center">
+                      <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-xl w-fit text-left">
                         <span className="text-yellow-500 mr-1">★</span>
                         <span className="text-sm font-medium text-yellow-700">
                           {place.average_rating || "N/A"}
                         </span>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 text-center">
                       <span
-                        className={`px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide ${
+                        className={`px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide text-left inline-block ${
                           place.status === "approved"
                             ? "bg-green-100 text-green-800 border border-green-200"
                             : place.status === "rejected"
@@ -534,10 +543,10 @@ const AdminPanel = () => {
                           : "Menunggu"}
                       </span>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 text-center">
                       <button
-                        onClick={() => openDetailModal(place)}
                         className="bg-gradient-to-r from-[#3C91E6] to-[#8ab6f6] text-white px-4 py-2 rounded-2xl text-sm font-medium hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+                        onClick={() => openDetailModal(place)}
                       >
                         Detail
                       </button>
@@ -575,7 +584,9 @@ const AdminPanel = () => {
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
               className={`w-10 h-10 rounded-2xl border-2 border-[#c3c7e2] bg-white/70 text-[#979fcd] hover:bg-[#3C91E6] hover:text-white hover:border-transparent transition-all duration-200 hover:shadow-lg cursor-pointer ${
-                currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }`}
             >
               {">"}
@@ -696,7 +707,9 @@ const AdminPanel = () => {
 
             <div className="p-6 flex justify-end space-x-4">
               <button
-                onClick={() => handleDelete(selectedPlace.id, selectedPlace.name)}
+                onClick={() =>
+                  handleDelete(selectedPlace.id, selectedPlace.name)
+                }
                 className="px-6 py-2 border border-gray-500 text-gray-500 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 Hapus

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLogin } from '../hooks/useLogin';
-import LoadingIndicator from '../components/LoadingIndicator';
 
 const LoginPage = () => {
   const { loginUser, loading, error } = useLogin();
@@ -21,12 +20,6 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center z-50">
-          <LoadingIndicator />
-        </div>
-      )}
-      
       <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
         <Link to="/" aria-label="Go to home page">
           <img src="/logo.png" alt="EasyGo Logo" className="w-60" />
@@ -58,10 +51,14 @@ const LoginPage = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-[#3C91E6] text-white py-2 rounded-full hover:bg-[#237ED9] transition"
+              className="w-full bg-[#3C91E6] text-white py-2 rounded-full hover:bg-[#237ED9] transition flex items-center justify-center"
               disabled={loading}
             >
-              {loading ? 'Tunggu sebentar...' : 'Masuk'}
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                'Masuk'
+              )}
             </button>
             <button
               type="button"

@@ -1,9 +1,7 @@
-// src/pages/LoginAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLogin } from '../hooks/useLogin';
 import { isAuthenticated } from '../utils/authUtils';
-import LoadingIndicator from '../components/LoadingIndicator';
 
 const LoginAdmin = () => {
     const { loginUser, loading, error } = useLogin(true); // Pass true for admin login
@@ -27,11 +25,6 @@ const LoginAdmin = () => {
 
     return (
         <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
-            {loading && (
-                <div className="absolute inset-0 flex items-center justify-center z-50">
-                    <LoadingIndicator />
-                </div>
-            )}
             <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
                 <img src="/logo.png" alt="EasyGo Logo" className="w-60" />
             </div>
@@ -57,10 +50,14 @@ const LoginAdmin = () => {
                         />
                         <button
                             type="submit"
-                            className="w-full bg-[#3C91E6] text-white py-2 rounded-full hover:bg-[#237ED9] transition"
+                            className="w-full bg-[#3C91E6] text-white py-2 rounded-full hover:bg-[#237ED9] transition flex items-center justify-center"
                             disabled={loading}
                         >
-                            {loading ? 'Tunggu sebentar...' : 'Masuk'}
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                'Masuk'
+                            )}
                         </button>
                         <Link
                             to="/login"
