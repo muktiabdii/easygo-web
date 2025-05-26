@@ -39,7 +39,7 @@ const AdminPanel = () => {
           throw new Error("Authentication token not found");
         }
         const response = await axios.get(
-          "http://localhost:8000/api/places/admin",
+          "https://easygo-api-production.up.railway.app/api/places/admin",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -120,7 +120,7 @@ const AdminPanel = () => {
     try {
       const token = localStorage.getItem("auth_header");
       await axios.put(
-        `http://localhost:8000/api/places/${id}/approve`,
+        `https://easygo-api-production.up.railway.app/api/places/${id}/approve`,
         {},
         {
           headers: {
@@ -144,7 +144,7 @@ const AdminPanel = () => {
     try {
       const token = localStorage.getItem("auth_header");
       await axios.put(
-        `http://localhost:8000/api/places/${id}/reject`,
+        `https://easygo-api-production.up.railway.app/api/places/${id}/reject`,
         {},
         {
           headers: {
@@ -180,7 +180,7 @@ const AdminPanel = () => {
         throw new Error("Authentication token not found");
       }
       await axios.delete(
-        `http://localhost:8000/api/places/${placeToDelete.id}`,
+        `https://easygo-api-production.up.railway.app/api/places/${placeToDelete.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -80,7 +80,7 @@ const Navbar = ({
         };
 
         const response = await axios.get(
-          "http://localhost:8000/api/auth/validate-token",
+          "https://easygo-api-production.up.railway.app/api/auth/validate-token",
           config
         );
         if (
