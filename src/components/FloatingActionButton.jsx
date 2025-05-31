@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthDialog from './AuthDialog';
-import { isAuthenticated, validateTokenWithBackend } from '../utils/authUtils';
+import ConfirmDialog from "./ConfirmDialog";
+import { isAuthenticated, validateTokenWithBackend } from "../utils/authUtils";
 
 const FloatingActionButton = ({ onLocateUser }) => {
   const navigate = useNavigate();
@@ -86,12 +86,16 @@ const FloatingActionButton = ({ onLocateUser }) => {
       </button>
 
       {showAuthDialog && (
-        <div className="fixed inset-0 z-[1001]">
-          <AuthDialog 
-            onLogin={handleLogin} 
-            onCancel={handleCancelAuth} 
-          />
-        </div>
+        <ConfirmDialog
+          isOpen={showAuthDialog}
+          onConfirm={handleLogin}
+          onCancel={handleCancelAuth}
+          message="Harap login untuk mengakses konten ini. Ingin masuk sekarang?"
+          confirmLabel="Masuk"
+          cancelLabel="Batal"
+          confirmColor="text-[#3C91E6]"
+          cancelColor="text-red-500"
+        />
       )}
     </div>
   );

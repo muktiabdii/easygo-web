@@ -22,7 +22,7 @@ const LogoutDialog = forwardRef(({ onConfirm, onCancel }, ref) => {
     >
       <div
         ref={ref}
-        className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full mx-4"
+        className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-8 max-w-md w-full mx-4"
         onClick={handleDialogClick}
       >
         <div className="text-center mb-2">
@@ -33,14 +33,14 @@ const LogoutDialog = forwardRef(({ onConfirm, onCancel }, ref) => {
           <div className="flex justify-center space-x-4 mt-6">
             <button
               onClick={handleCancel}
-              className="py-2 px-10 text-base bg-gray-100 hover:bg-gray-200 text-[#3C91E6] font-semibold rounded-[12px]"
+              className="w-28 py-3 px-4 text-base bg-gray-100 hover:bg-gray-200 text-[#3C91E6] font-semibold rounded-[12px] cursor-pointer"
             >
               Batal
             </button>
             
             <button
               onClick={handleConfirm}
-              className="py-2 px-10 text-base bg-gray-100 hover:bg-gray-200 text-red-500 font-semibold rounded-[12px]"
+              className="w-28 py-3 px-4 text-base bg-gray-100 hover:bg-gray-200 text-red-500 font-semibold rounded-[12px] cursor-pointer"
             >
               Keluar
             </button>
