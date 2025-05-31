@@ -1,13 +1,14 @@
-// authService.js
 import axios from 'axios';
 import { setAuth } from '../utils/authUtils';
 
 // Initialize API URLs
-const Login_API_URL = 'http://localhost:8000/api/auth/login'; 
-const Register_API_URL = 'http://localhost:8000/api/auth/register';
-const ForgotPassword_API_URL = 'http://localhost:8000/api/auth/password/forgot';
-const validateOTP_API_URL = 'http://localhost:8000/api/auth/password/validate-otp';
-const ResetPassword_API_URL = 'http://localhost:8000/api/auth/password/reset';
+const API_URL = 'http://localhost:8000/api';
+const Login_API_URL = `${API_URL}/auth/login`; 
+const Register_API_URL = `${API_URL}/auth/register`;
+const ForgotPassword_API_URL = `${API_URL}/auth/password/forgot`;
+const validateOTP_API_URL = `${API_URL}/auth/password/validate-otp`;
+const ResetPassword_API_URL = `${API_URL}/auth/password/reset`;
+const CurrentUser_API_URL = `${API_URL}/user`;
 
 // Login function
 export const login = async (email, password) => {
@@ -82,5 +83,27 @@ export const resetPassword = async (email, otp, password, password_confirmation)
   
   catch (error) {
     throw error.response ? error.response.data : error.message; 
+  }
+};
+
+// Get current logged-in user
+export const getCurrentUser = async () => {
+  try {
+    const token = localStorage.getItem("auth_header");
+    if (!token || typeof token !== "string" || token.length < 10) {
+      throw new Error("Invalid or missing auth token");
+    }
+    const response = await axios.get(CurrentUser_API_URL, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      withCredentials: true,
+    });
+    return {
+      userId: Number(response.data.user_id),
+      data: response.data,
+    };
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
   }
 };

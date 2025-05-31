@@ -1,45 +1,32 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8000/api/chat';
+const API_URL = 'http://localhost:8000/api';
 
-// Ambil daftar chat room user saat ini
-export const getChatRooms = async () => {
-  try {
-    const response = await axios.get(BASE_URL);
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error.message;
-  }
+const getAuthHeaders = () => {
+  const auth_header = localStorage.getItem('auth_header');
+  return {
+    headers: {
+      Authorization: `Bearer ${auth_header}`,
+    },
+  };
 };
 
-// Buat chat room baru
-export const createChatRoom = async (user2_id) => {
-  try {
-    const response = await axios.post(BASE_URL, { user2_id });
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error.message;
-  }
+export const getChatRooms = () => {
+  return axios.get(`${API_URL}/chat`, getAuthHeaders());
 };
 
-// Ambil semua pesan dari chat room tertentu
-export const getMessages = async (chatRoomId) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/${chatRoomId}/messages`);
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error.message;
-  }
+export const createChatRoom = (userId) => {
+  return axios.post(`${API_URL}/chat`, { user_id: userId }, getAuthHeaders());
 };
 
-// Kirim pesan ke chat room tertentu
-export const sendMessage = async (chatRoomId, message) => {
-  try {
-    const response = await axios.post(`${BASE_URL}/${chatRoomId}/messages`, {
-      message,
-    });
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error.message;
-  }
+export const getMessages = (chatRoomId) => {
+  return axios.get(`${API_URL}/chat/${chatRoomId}/messages`, getAuthHeaders());
+};
+
+export const sendMessage = (chatRoomId, message) => {
+  return axios.post(`${API_URL}/chat/${chatRoomId}/messages`, { message }, getAuthHeaders());
+};
+
+export const searchMessages = (keyword) => {
+  return axios.post(`${API_URL}/chat/messages/search`, { keyword }, getAuthHeaders());
 };
