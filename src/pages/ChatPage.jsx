@@ -1,258 +1,126 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import NavbarBack from "../components/NavbarBack";
-
-const users = [
-  {
-    name: "James",
-    lastMessage: "Aku lihat sepertinya kau kesulitan mencari akses kursi roda?",
-    time: "9:23 PM",
-    img: "/users/james.jpg",
-    city: "Malang",
-    lastActive: "3 April",
-    reviewCount: 120,
-    messages: [
-      {
-        text: "Hey bung! Apa kabar hari ini?",
-        time: "9:00 PM",
-        date: "2025-04-28",
-      },
-      {
-        text: "Aku lihat sepertinya kau kesulitan mencari akses kursi roda?",
-        time: "9:23 PM",
-        date: "2025-04-28",
-      },
-      {
-        text: "Aku bantu cari informasi ya.",
-        time: "9:27 PM",
-        date: "2025-04-28",
-      },
-    ],
-  },
-  {
-    name: "Rickley",
-    lastMessage: "Sama-sama, semoga membantu!",
-    time: "12:45 AM",
-    img: "/users/rickley.jpg",
-    city: "Surabaya",
-    lastActive: "2 April",
-    reviewCount: 85,
-    messages: [
-      {
-        text: "Aku baru saja melihat reviewmu bung, terima kasih banyak!",
-        time: "12:30 AM",
-        date: "2025-04-02",
-      },
-      {
-        text: "Kalau butuh rekomendasi lain, kabarin aja ya.",
-        time: "1:00 AM",
-        date: "2025-04-02",
-      },
-      {
-        text: "By the way, aku juga menemukan tempat lain yang mungkin kamu suka.",
-        time: "1:30 AM",
-        date: "2025-04-03",
-      },
-    ],
-  },
-  {
-    name: "Billy",
-    lastMessage: "Tentu, kapan saja!",
-    time: "10:45 AM",
-    img: "/users/billy.jpg",
-    city: "Bandung",
-    lastActive: "1 April",
-    reviewCount: 60,
-    messages: [
-      {
-        text: "Heyy, kamu terlihat keren, mau jalan sama aku ga?",
-        time: "10:30 AM",
-        date: "2025-04-01",
-      },
-      {
-        text: "Mungkin akhir pekan ini?",
-        time: "11:00 AM",
-        date: "2025-04-01",
-      },
-      {
-        text: "Aku pikir hari Sabtu bisa jadi pilihan yang baik.",
-        time: "11:30 AM",
-        date: "2025-04-02",
-      },
-    ],
-  },
-  {
-    name: "Sarah",
-    lastMessage: "Besok kita bertemu ya!",
-    time: "4:00 PM",
-    img: "/users/sarah.jpg",
-    city: "Jakarta",
-    lastActive: "29 Maret",
-    reviewCount: 150,
-    messages: [
-      {
-        text: "Halo! Aku baru daftar aplikasi ini.",
-        time: "3:00 PM",
-        date: "2025-03-29",
-      },
-      {
-        text: "Terima kasih, senang bertemu kamu.",
-        time: "3:20 PM",
-        date: "2025-03-29",
-      },
-    ],
-  },
-  {
-    name: "Michael",
-    lastMessage: "Aku bisa rekomendasikan beberapa tempat bagus.",
-    time: "2:15 PM",
-    img: "/users/michael.jpg",
-    city: "Yogyakarta",
-    lastActive: "31 Maret",
-    reviewCount: 200,
-    messages: [
-      {
-        text: "Hai, kamu tau tempat makan ramah disabilitas?",
-        time: "2:00 PM",
-        date: "2025-03-31",
-      },
-      {
-        text: "Aku bisa rekomendasikan beberapa tempat bagus.",
-        time: "2:15 PM",
-        date: "2025-03-31",
-      },
-      {
-        text: "Nanti aku kirim daftarnya ya.",
-        time: "2:30 PM",
-        date: "2025-03-31",
-      },
-    ],
-  },
-  {
-    name: "Emma",
-    lastMessage: "Aku support selalu!",
-    time: "5:30 PM",
-    img: "/users/emma.jpg",
-    city: "Semarang",
-    lastActive: "1 April",
-    reviewCount: 95,
-    messages: [
-      {
-        text: "Lihat perkembangan aplikasi ini keren banget.",
-        time: "5:00 PM",
-        date: "2025-04-01",
-      },
-      { text: "Aku support selalu!", 
-        time: "5:30 PM", 
-        date: "2025-04-01" 
-      },
-    ],
-  },
-  {
-    name: "Daniel",
-    lastMessage: "Kalau mau, kita bisa buat komunitas kecil.",
-    time: "6:45 PM",
-    img: "/users/daniel.jpg",
-    city: "Bali",
-    lastActive: "30 Maret",
-    reviewCount: 110,
-    messages: [
-      {
-        text: "Aku ingin berbagi pengalaman tentang aksesibilitas.",
-        time: "6:00 PM",
-        date: "2025-03-30",
-      },
-      {
-        text: "Kalau mau, kita bisa buat komunitas kecil.",
-        time: "6:45 PM",
-        date: "2025-03-30",
-      },
-    ],
-  },
-];
+import { useChatRooms } from "../hooks/useChatRooms";
+import { useMessages } from "../hooks/useMessages";
+import { useSendMessages } from "../hooks/useSendMessages";
+import { useCreateRoom } from "../hooks/useCreateRoom";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useSearchMessages } from "../hooks/useSearchMessages";
+import { useSearchUsers } from "../hooks/useSearchUsers";
+import { isToday, isYesterday, format, parse, isValid } from "date-fns";
+import id from "date-fns/locale/id";
+import "../styles/ChatPage.css";
 
 const ChatPage = () => {
   const [activeTab, setActiveTab] = useState("cari");
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [newMessage, setNewMessage] = useState(""); // State untuk menyimpan pesan baru
-  const messagesEndRef = useRef(null); // Ref untuk elemen paling bawah chat
-
-  // Modifikasi data users dengan menambahkan isMe pada messages
-  const modifiedUsers = users.map((user) => ({
-    ...user,
-    messages: user.messages.map((msg, index) => ({
-      ...msg,
-      // Asumsikan pesan dengan index ganjil adalah pesan kita (hanya contoh)
-      // Dalam aplikasi nyata, ini harus disesuaikan dengan sistem auth
-      isMe: index % 2 === 0, // Contoh: pesan genap adalah dari kita
-    })),
-  }));
-
-  const handleUserSelect = (user) => {
-    // Temukan user yang sesuai dari modifiedUsers
-    const foundUser = modifiedUsers.find((u) => u.name === user.name);
-    setSelectedUser(user);
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [selectedUser?.messages]);
-
-  const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
-
-    // Tambahkan pesan baru ke user yang dipilih
-    const updatedUser = {
-      ...selectedUser,
-      messages: [
-        ...selectedUser.messages,
-        {
-          text: newMessage,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          date: new Date().toISOString().split("T")[0],
-          isMe: true, // Pesan baru selalu dari kita
-        },
-      ],
-    };
-
-    setSelectedUser(updatedUser);
-    setNewMessage("");
-    scrollToBottom(); // Scroll ke bawah setelah mengirim pesan
-  };
-
-  const formatDateLabel = (dateStr) => {
-    const now = new Date();
-    const date = new Date(`2000-01-01T${dateStr}`); // pakai jam saja karena datanya tidak lengkap
-
-    const today = now.toDateString();
-    const yesterday = new Date();
-    yesterday.setDate(now.getDate() - 1);
-
-    // Simulasi label (karena tidak ada tanggal aktual)
-    return "Hari ini"; // Ubah sesuai kebutuhan
-  };
-
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [newMessage, setNewMessage] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState({
     kota: false,
     review: false,
     aktif: false,
   });
-
   const [selectedFilters, setSelectedFilters] = useState({
     kota: "",
     review: "",
     aktif: "",
   });
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
   const kotaRef = useRef(null);
   const reviewRef = useRef(null);
   const aktifRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
+  const lastScrollTop = useRef(0);
+
+  const { user, loading: authLoading, error: authError } = useCurrentUser();
+  const { chatRooms, loading: roomsLoading, addChatRoom } = useChatRooms();
+  const {
+    messages,
+    loading: messagesLoading,
+    refetch,
+    error: messagesError,
+  } = useMessages(selectedRoom?.id);
+  const {
+    handleSend,
+    loading: sendLoading,
+    error: sendError,
+  } = useSendMessages();
+  const {
+    searchedMessages,
+    search,
+    clearSearch,
+    loading: searchLoading,
+    error: searchError,
+  } = useSearchMessages();
+  const {
+    createRoom,
+    loading: createLoading,
+    error: createError,
+  } = useCreateRoom();
+  const {
+    users,
+    searchUsers,
+    loading: usersLoading,
+    error: usersError,
+  } = useSearchUsers();
+
+  // Handle profile image errors
+  const handleImageError = (e) => {
+    console.log("Profile image failed to load, using placeholder:", e.target.src);
+    e.target.src = "/icons/user.png";
+  };
+
+  // Fetch users when "Cari Orang" tab is active or filters change
+  useEffect(() => {
+    if (activeTab === "cari") {
+      searchUsers({
+        query: searchKeyword,
+        city: selectedFilters.kota !== "Semua Kota" ? selectedFilters.kota : "",
+        review_count:
+          selectedFilters.review !== "Semua" ? selectedFilters.review : "",
+        last_active:
+          selectedFilters.aktif !== "Semua" ? selectedFilters.aktif : "",
+      });
+    }
+  }, [activeTab, searchKeyword, selectedFilters, searchUsers]);
+
+  useEffect(() => {
+    const chatBody = chatBodyRef.current;
+    if (!chatBody) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = chatBody;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 10;
+      setShouldScrollToBottom(isAtBottom);
+      lastScrollTop.current = scrollTop;
+    };
+
+    chatBody.addEventListener("scroll", handleScroll);
+    return () => chatBody.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (messagesLoading) {
+      chatBodyRef.current?.scrollTo(0, lastScrollTop.current);
+      return;
+    }
+    if (
+      shouldScrollToBottom &&
+      messagesEndRef.current &&
+      Object.keys(messages).length > 0
+    ) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, messagesLoading, shouldScrollToBottom]);
+
+  useEffect(() => {
+    setShouldScrollToBottom(true);
+    setSearchKeyword("");
+    clearSearch();
+  }, [selectedRoom?.id, clearSearch]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -267,470 +135,707 @@ const ChatPage = () => {
         setDropdownOpen({ kota: false, review: false, aktif: false });
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const getOpponentUser = useCallback(
+    (room) => {
+      if (!room || !user?.userId) {
+        return { name: "Unknown", img: "/icons/user.png" };
+      }
+      const isUser1 = room.user1?.id === user.userId;
+      const opponent = isUser1
+        ? room.user2 || { name: "Unknown", img: "/icons/user.png" }
+        : room.user1 || { name: "Unknown", img: "/icons/user.png" };
+      return {
+        ...opponent,
+        img: opponent.img || "/icons/user.png",
+      };
+    },
+    [user]
+  );
+
+  const handleRoomSelect = useCallback(
+    (room) => {
+      if (!room?.chat_room_id) {
+        console.log("Invalid room selected:", room);
+        return;
+      }
+      const opponentUser = getOpponentUser(room);
+      const normalizedRoom = {
+        id: room.chat_room_id,
+        opponentUser,
+      };
+      setSelectedRoom(normalizedRoom);
+    },
+    [getOpponentUser]
+  );
+
+  const handleSendMessage = useCallback(async () => {
+    if (newMessage.trim() === "" || !selectedRoom?.id) {
+      console.log("Cannot send message: empty or no room selected", {
+        newMessage,
+        selectedRoomId: selectedRoom?.id,
+      });
+      return;
+    }
+    try {
+      console.log("Attempting to send message:", {
+        message: newMessage,
+        chatRoomId: selectedRoom.id,
+      });
+      await handleSend(selectedRoom.id, newMessage);
+      console.log("Message sent successfully");
+      setNewMessage("");
+      setShouldScrollToBottom(true);
+    } catch (error) {
+      console.error("Failed to send message:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+    }
+  }, [newMessage, selectedRoom, handleSend]);
+
+  const handleCreateRoom = useCallback(
+    async (userId) => {
+      try {
+        console.log("Creating room for user:", userId);
+        await createRoom(userId, (newRoom) => {
+          if (!newRoom.id) {
+            console.error("New room missing id:", newRoom);
+            return;
+          }
+          const opponentUser = users.find((u) => u.id === userId) || {
+            id: userId,
+            name: "Unknown",
+            img: "/icons/user.png",
+          };
+          const newRoomData = {
+            chat_room_id: newRoom.id,
+            user1: newRoom.user1 || { id: user.userId, name: user.name, img: user.img || "/icons/user.png" },
+            user2: newRoom.user2 || { id: userId, name: opponentUser.name, img: opponentUser.img || "/icons/user.png" },
+            last_message: null,
+          };
+          addChatRoom(newRoomData);
+          setSelectedRoom({
+            id: newRoom.id,
+            opponentUser,
+          });
+          setActiveTab("obrolan");
+        });
+      } catch (error) {
+        console.error("Failed to create room:", error);
+      }
+    },
+    [createRoom, user, users, addChatRoom]
+  );
+
+  const handleSearchMessages = useCallback(
+    (keyword) => {
+      setSearchKeyword(keyword);
+      if (keyword.trim() === "") {
+        clearSearch();
+      } else {
+        search(keyword);
+      }
+    },
+    [search, clearSearch]
+  );
+
+  const handleSearchUsers = useCallback(
+    (keyword) => {
+      setSearchKeyword(keyword);
+      searchUsers({
+        query: keyword,
+        city: selectedFilters.kota !== "Semua Kota" ? selectedFilters.kota : "",
+        review_count:
+          selectedFilters.review !== "Semua" ? selectedFilters.review : "",
+        last_active:
+          selectedFilters.aktif !== "Semua" ? selectedFilters.aktif : "",
+      });
+    },
+    [searchUsers, selectedFilters]
+  );
+
+  const formatDateLabel = useCallback((dateStr, messagesForDate) => {
+    if (dateStr === "Hari Ini" || dateStr === "Kemarin") {
+      return dateStr;
+    }
+    const firstMessage = messagesForDate && messagesForDate[0];
+    if (firstMessage && firstMessage.created_at) {
+      const date = new Date(firstMessage.created_at);
+      if (isValid(date)) {
+        if (isToday(date)) return "Hari Ini";
+        if (isYesterday(date)) return "Kemarin";
+        return format(date, "iiii, d MMMM yyyy", { locale: id });
+      }
+    }
+    try {
+      const date = parse(dateStr, "iiii, d MMMM yyyy", new Date(), {
+        locale: id,
+      });
+      if (isValid(date)) {
+        if (isToday(date)) return "Hari Ini";
+        if (isYesterday(date)) return "Kemarin";
+        return dateStr;
+      }
+    } catch (error) {
+      console.warn("Error parsing date:", dateStr, error);
+    }
+    return "Tanggal Tidak Valid";
+  }, []);
+
+  const formatLastMessageTime = useCallback((createdAt) => {
+    if (!createdAt) {
+      return new Date().toLocaleTimeString("id-ID", {
+        timeZone: "Asia/Jakarta",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+    const date = new Date(createdAt);
+    if (isNaN(date)) {
+      return "Waktu Tidak Valid";
+    }
+    return date.toLocaleTimeString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
+
+  const filteredChatRooms = useMemo(
+    () =>
+      searchKeyword
+        ? chatRooms.filter((room) =>
+            Object.values(searchedMessages).some((messagesForDate) =>
+              messagesForDate.some(
+                (msg) =>
+                  msg.chat_room_id === room.chat_room_id &&
+                  msg.message.toLowerCase().includes(searchKeyword.toLowerCase())
+              )
+            )
+          )
+        : chatRooms,
+    [chatRooms, searchKeyword, searchedMessages]
+  );
+
+  if (authLoading) {
+    return <div className="text-center p-6">Memuat data pengguna...</div>;
+  }
+
+  if (authError) {
+    return <div className="text-center text-red-500 p-6">{authError}</div>;
+  }
 
   return (
     <>
       <NavbarBack title="Chat" />
-      <div className="max-h-screen bg-white px-15 pt-25">
-        <div className="flex space-x-5">
-
-          {/* Sidebar */}
-          <div className="w-1/6 space-y-4">
-
-            {/* Tombol Cari Orang */}
-            <button
-              onClick={() => setActiveTab("cari")}
-              className={`flex items-center space-x-2 px-6 py-4 transition-all duration-300 overflow-hidden ${
-                activeTab === "cari"
-                  ? "bg-[#EFF0F7] text-[#3C91E6] rounded-l-lg rounded-r-none w-[265px]"
-                  : "bg-[#EFF0F7] text-black shadow rounded-lg w-[230px]"
-              } ${activeTab === "cari" ? "rounded-r-none" : ""}`}
-            >
-              <img
-                src={`/icons/${
-                  activeTab === "cari" ? "cariorang-blue" : "cariorang-black"
-                }.png`}
-                alt="Cari"
-                className="h-5 w-5"
-              />
-              <span className="font-medium">Cari Orang</span>
-            </button>
-
-            {/* Tombol Semua Obrolan */}
-            <button
-              onClick={() => setActiveTab("obrolan")}
-              className={`flex items-center space-x-2 px-6 py-4 transition-all duration-300 overflow-hidden ${
-                activeTab === "obrolan"
-                  ? "bg-[#EFF0F7] text-[#3C91E6] rounded-l-lg rounded-r-none w-[265px]"
-                  : "bg-[#EFF0F7] text-black shadow rounded-lg w-[230px]"
-              } ${activeTab === "obrolan" ? "rounded-r-none" : ""}`}
-            >
-              <img
-                src={`/icons/${
-                  activeTab === "obrolan"
-                    ? "semuaobrolan-blue"
-                    : "semuaobrolan-black"
-                }.png`}
-                alt="Obrolan"
-                className="h-5 w-5"
-              />
-              <span className="font-medium">Semua Obrolan</span>
-            </button>
+      <div className="min-h-screen bg-white px-4 pt-25 pb-4 chat-container">
+        <div className="flex flex-col lg:flex-row lg:space-x-6 max-w-7xl mx-auto">
+          {/* Tabs */}
+          <div className="w-full lg:w-64 space-y-4 mb-6 lg:mb-0">
+            {["cari", "obrolan"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`tab-button rounded-lg ${
+                  activeTab === tab ? "active" : "text-gray-700 hover:bg-[#E5E7EB]"
+                }`}
+                aria-label={tab === "cari" ? "Cari Orang" : "Semua Obrolan"}
+              >
+                <div className="tab-content">
+                  <img
+                    src={`/icons/${
+                      tab === "cari"
+                        ? activeTab === "cari"
+                          ? "cariorang-blue"
+                          : "cariorang-black"
+                        : activeTab === "obrolan"
+                        ? "semuaobrolan-blue"
+                        : "semuaobrolan-black"
+                    }.png`}
+                    alt=""
+                    className="h-6 w-6"
+                  />
+                  <span className="font-semibold text-base">
+                    {tab === "cari" ? "Cari Orang" : "Semua Obrolan"}
+                  </span>
+                </div>
+              </button>
+            ))}
           </div>
 
-          {/* Konten sesuai sidebar*/}
           {activeTab === "cari" ? (
-            <div className="w-5/6 flex space-x-6">
-              
-              {/* Cari Orang */}
-              <div className="w-6/10 bg-[#EFF0F7] rounded-xl p-6 obrolan-container h-[600px] flex flex-col">
-                <h2 className="text-center text-lg font-semibold mb-4">
-                  Cari Orang
+            <div className="w-full flex flex-col lg:flex-row lg:space-x-6">
+              {/* Search Users Panel */}
+              <div className="w-full lg:w-2/3 bg-[#EFF0F7] rounded-2xl p-6 h-[calc(100vh-140px)] flex flex-col">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+                  Cari Pengguna
                 </h2>
                 <div className="relative mb-6">
                   <input
                     type="text"
-                    placeholder="Cari Orang..."
-                    className="w-full pl-10 pr-4 py-2 bg-white rounded-full border border-[#3C91E6] focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                    placeholder="Cari nama pengguna..."
+                    value={searchKeyword}
+                    onChange={(e) => handleSearchUsers(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
+                    aria-label="Cari pengguna"
                   />
                   <img
                     src="/icons/search.png"
                     alt="Search"
-                    className="absolute left-3 top-2.5 h-5 w-5"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
                   />
                 </div>
-                <div className="space-y-5 overflow-y-auto flex-1">
-                  {users.map((user, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-4 p-2 hover:bg-white rounded-lg"
-                      onClick={() => handleUserSelect(user)}
-                    >
-                      <img
-                        src={user.img}
-                        alt={user.name}
-                        className="h-10 w-10 rounded-full"
-                      />
-                      <div className="flex-1">
-                        <p className="font-semibold">{user.name}</p>
-                        <p className="text-sm text-gray-600 truncate">
-                          Telah mereview {user.reviewCount}+ fasilitas
-                          aksesibilitas
-                        </p>
+                <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                  {usersLoading ? (
+                    <div className="text-center text-gray-600">Memuat...</div>
+                  ) : usersError ? (
+                    <div className="text-center text-red-500">{usersError}</div>
+                  ) : users.length === 0 ? (
+                    <div className="text-center text-gray-500">
+                      Tidak ada pengguna ditemukan
+                    </div>
+                  ) : (
+                    users.map((u) => (
+                      <div
+                        key={u.id}
+                        className="chat-room-item flex items-center space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-white cursor-pointer transition-colors"
+                        onClick={() => handleCreateRoom(u.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === "Enter" && handleCreateRoom(u.id)}
+                      >
+                        <img
+                          src={u.profile_image || "/icons/user.png"}
+                          onError={handleImageError}
+                          alt={u.name}
+                          className="h-12 w-12 rounded-full object-cover"
+                          loading="lazy"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800">{u.name}</p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {u.reviews_count || 0}+ ulasan aksesibilitas
+                          </p>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <p className="text-xs text-gray-500">
+                            {u.city || "Tidak Diketahui"} | Aktif{" "}
+                            {u.last_active
+                              ? new Date(u.last_active).toLocaleDateString(
+                                  "id-ID",
+                                  { day: "numeric", month: "short" }
+                                )
+                              : "Tidak Diketahui"}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateRoom(u.id);
+                            }}
+                            className="bg-[#3C91E6] text-white text-xs px-4 py-1 rounded-full hover:bg-[#2B7CDC] transition-colors"
+                            disabled={createLoading}
+                            aria-label={`Mulai obrolan baru dengan ${u.name}`}
+                          >
+                            {createLoading ? "Membuat..." : "Obrolan Baru"}
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-right space-y-0">
-                        <p className="text-xs text-gray-500">
-                          {user.city} | Aktif {user.lastActive}
-                        </p>
-                        <button className="bg-[#3C91E6] text-white text-xs px-4 py-0.5 rounded">
-                          Obrolan Baru
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Filter Panel */}
+              <div className="w-full lg:w-1/3 bg-[#EFF0F7] p-6 rounded-2xl h-[calc(100vh-140px)] flex flex-col mt-6 lg:mt-0">
+                <h3 className="text-xl font-bold text-gray-800 text-center mb-6">
+                  Filter Pencarian
+                </h3>
+                <div className="flex-1 space-y-6">
+                  {[
+                    {
+                      id: "kota",
+                      label: "Asal Kota",
+                      options: [
+                        "Semua Kota",
+                        "Jakarta",
+                        "Bandung",
+                        "Surabaya",
+                        "Yogyakarta",
+                      ],
+                      ref: kotaRef,
+                    },
+                    {
+                      id: "review",
+                      label: "Jumlah Ulasan",
+                      options: ["Semua", "0", "10+", "50+", "100+", "1000+"],
+                      ref: reviewRef,
+                    },
+                    {
+                      id: "aktif",
+                      label: "Aktif Terakhir",
+                      options: [
+                        "Semua",
+                        "Hari ini",
+                        "Kemarin",
+                        "Minggu ini",
+                        "Bulan lalu",
+                        "Tahun lalu",
+                      ],
+                      ref: aktifRef,
+                    },
+                  ].map(({ id, label, options, ref }) => (
+                    <div key={id} className="flex flex-col space-y-2" ref={ref}>
+                      <label
+                        htmlFor={`${id}-filter`}
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        {label}
+                      </label>
+                      <div className="relative">
+                        <button
+                          id={`${id}-filter`}
+                          onClick={() =>
+                            setDropdownOpen((prev) => ({
+                              kota: false,
+                              review: false,
+                              aktif: false,
+                              [id]: !prev[id],
+                            }))
+                          }
+                          className="p-3 bg-gray-50 rounded-lg w-full text-left border border-gray-300 hover:bg-gray-100 transition-colors"
+                          aria-label={`Pilih ${label.toLowerCase()}`}
+                          aria-expanded={dropdownOpen[id]}
+                        >
+                          {selectedFilters[id] || `Pilih ${label}`}
+                          <img
+                            src="/icons/dropdown.png"
+                            alt=""
+                            className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
+                              dropdownOpen[id] ? "rotate-180" : ""
+                            }`}
+                          />
                         </button>
+                        {dropdownOpen[id] && (
+                          <div className="dropdown-menu absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1">
+                            {options.map((option) => (
+                              <div
+                                key={option}
+                                onClick={() => {
+                                  setSelectedFilters((prev) => ({
+                                    ...prev,
+                                    [id]: option,
+                                  }));
+                                  setDropdownOpen((prev) => ({
+                                    ...prev,
+                                    [id]: false,
+                                  }));
+                                }}
+                                className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer text-sm"
+                                role="option"
+                                aria-selected={selectedFilters[id] === option}
+                              >
+                                {option}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Filter */}
-              <div className="w-4/10 bg-[#EFF0F7] p-6 rounded-xl shadow space-y-4 filter-container h-[600px] flex flex-col">
-                <h3 className="text-center text-lg font-semibold">
-                  Filter Pencarian
-                </h3>
-                <div className="space-y-10 flex-1">
-                  <div className="flex flex-col items-center">
-                    <div className="w-90 flex flex-col space-y-2" ref={kotaRef}>
-                      <label className="text-sm font-medium text-gray-700">
-                        Asal Kota
-                      </label>
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setDropdownOpen({
-                              kota: !dropdownOpen.kota,
-                              review: false,
-                              aktif: false,
-                            })
-                          }
-                          className="p-3 bg-white rounded-md w-full text-left border border-gray-300"
-                        >
-                          {selectedFilters.kota || "Pilih Kota"}
-                          <img
-                            src="/icons/dropdown.png"
-                            alt="Dropdown Icon"
-                            className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
-                              dropdownOpen.kota ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {dropdownOpen.kota && (
-                          <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-md">
-                            {[
-                              "Semua Kota",
-                              "Jakarta",
-                              "Bandung",
-                              "Surabaya",
-                              "Yogyakarta",
-                            ].map((kota) => (
-                              <div
-                                key={kota}
-                                onClick={() => {
-                                  setSelectedFilters((prev) => ({
-                                    ...prev,
-                                    kota,
-                                  }));
-                                  setDropdownOpen((prev) => ({
-                                    ...prev,
-                                    kota: false,
-                                  }));
-                                }}
-                                className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer"
-                              >
-                                {kota}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="w-90 flex flex-col space-y-2"
-                      ref={reviewRef}
-                    >
-                      <label className="text-sm font-medium text-gray-700">
-                        Jumlah Review
-                      </label>
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setDropdownOpen({
-                              kota: false,
-                              review: !dropdownOpen.review,
-                              aktif: false,
-                            })
-                          }
-                          className="p-3 bg-white rounded-md w-full text-left border border-gray-300"
-                        >
-                          {selectedFilters.review || "Pilih Jumlah Review"}
-                          <img
-                            src="/icons/dropdown.png"
-                            alt="Dropdown Icon"
-                            className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
-                              dropdownOpen.review ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {dropdownOpen.review && (
-                          <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-md">
-                            {[
-                              "Semua",
-                              "0",
-                              "10+",
-                              "50+",
-                              "100+",
-                              "1000+"
-                            ].map(
-                              (review) => (
-                                <div
-                                  key={review}
-                                  onClick={() => {
-                                    setSelectedFilters((prev) => ({
-                                      ...prev,
-                                      review,
-                                    }));
-                                    setDropdownOpen((prev) => ({
-                                      ...prev,
-                                      review: false,
-                                    }));
-                                  }}
-                                  className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer"
-                                >
-                                  {review}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="w-90 flex flex-col space-y-2"
-                      ref={aktifRef}
-                    >
-                      <label className="text-sm font-medium text-gray-700">
-                        Aktif Terakhir
-                      </label>
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setDropdownOpen({
-                              kota: false,
-                              review: false,
-                              aktif: !dropdownOpen.aktif,
-                            })
-                          }
-                          className="p-3 bg-white rounded-md w-full text-left border border-gray-300"
-                        >
-                          {selectedFilters.aktif || "Pilih Waktu"}
-                          <img
-                            src="/icons/dropdown.png"
-                            alt="Dropdown Icon"
-                            className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
-                              dropdownOpen.aktif ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {dropdownOpen.aktif && (
-                          <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-md">
-                            {[
-                              "Semua",
-                              "Hari ini",
-                              "Kemarin",
-                              "Minggu lalu",
-                              "Bulan lalu",
-                              "Tahun lalu",
-                            ].map((aktif) => (
-                              <div
-                                key={aktif}
-                                onClick={() => {
-                                  setSelectedFilters((prev) => ({
-                                    ...prev,
-                                    aktif,
-                                  }));
-                                  setDropdownOpen((prev) => ({
-                                    ...prev,
-                                    aktif: false,
-                                  }));
-                                }}
-                                className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer"
-                              >
-                                {aktif}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <button className="bg-[#3C91E6] text-white w-90 mx-auto py-3 rounded-md mt-4">
-                  Terapkan
+                <button
+                  className="bg-[#3C91E6] text-white w-full py-3 rounded-lg mt-6 hover:bg-[#2B7CDC] transition-colors"
+                  onClick={() =>
+                    searchUsers({
+                      query: searchKeyword,
+                      city:
+                        selectedFilters.kota !== "Semua Kota"
+                          ? selectedFilters.kota
+                          : "",
+                      review_count:
+                        selectedFilters.review !== "Semua"
+                          ? selectedFilters.review
+                          : "",
+                      last_active:
+                        selectedFilters.aktif !== "Semua"
+                          ? selectedFilters.aktif
+                          : "",
+                    })
+                  }
+                  aria-label="Terapkan filter pencarian"
+                >
+                  Terapkan Filter
                 </button>
               </div>
             </div>
           ) : (
-            <div className="w-5/6 flex space-x-6">
-              {/* Semua Obrolan */}
-              <div className="w-6/10 bg-[#EFF0F7] rounded-xl p-6 obrolan-container h-[600px] flex flex-col">
-                <h2 className="text-center text-lg font-semibold mb-4">
-                  Cari Obrolan
+            <div className="w-full flex flex-col lg:flex-row lg:space-x-6">
+              {/* Chat Rooms Panel */}
+              <div className="w-full lg:w-2/3 bg-[#EFF0F7] rounded-2xl p-6 h-[calc(100vh-140px)] flex flex-col">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+                  Obrolan
                 </h2>
                 <div className="relative mb-6">
                   <input
                     type="text"
-                    placeholder="Cari Obrolan..."
-                    className="w-full pl-10 pr-4 py-2 bg-white rounded-full border border-[#3C91E6] focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                    value={searchKeyword}
+                    onChange={(e) => handleSearchMessages(e.target.value)}
+                    placeholder="Cari pesan dalam obrolan..."
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
+                    aria-label="Cari obrolan"
                   />
                   <img
                     src="/icons/search.png"
                     alt="Search"
-                    className="absolute left-3 top-2.5 h-5 w-5"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
                   />
                 </div>
-                <div className="space-y-5 overflow-y-auto flex-1">
-                  {users.map((user, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-4 p-2 hover:bg-white rounded-lg"
-                      onClick={() => handleUserSelect(user)}
-                    >
-                      <img
-                        src={user.img}
-                        alt={user.name}
-                        className="h-10 w-10 rounded-full"
-                      />
-                      <div className="flex-1">
-                        <p className="font-semibold">{user.name}</p>
-                        <p className="text-sm text-gray-600 truncate">
-                          {user.lastMessage}
-                        </p>
-                      </div>
-                      <span className="text-xs text-gray-400">{user.time}</span>
+                <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                  {roomsLoading || searchLoading ? (
+                    <div className="text-center text-gray-600">Memuat...</div>
+                  ) : searchKeyword &&
+                    filteredChatRooms.length === 0 &&
+                    !searchLoading ? (
+                    <div className="text-center text-gray-500">
+                      Tidak ada obrolan ditemukan
                     </div>
-                  ))}
+                  ) : (
+                    filteredChatRooms.map((room) => {
+                      const opponentUser = getOpponentUser(room);
+                      return (
+                        <div
+                          key={room.chat_room_id}
+                          className="chat-room-item flex items-center space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-white cursor-pointer transition-colors"
+                          onClick={() => handleRoomSelect(room)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === "Enter" && handleRoomSelect(room)}
+                        >
+                          <img
+                            src={opponentUser?.img || "/icons/user.png"}
+                            onError={handleImageError}
+                            alt={opponentUser?.name}
+                            className="h-12 w-12 rounded-full object-cover"
+                            loading="lazy"
+                          />
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-800">
+                              {opponentUser?.name}
+                            </p>
+                            <p className="text-sm text-gray-600 truncate">
+                              {room.last_message?.message || "Belum ada pesan"}
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {formatLastMessageTime(
+                              room.last_message?.created_at
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
-              {/* Detail Chat */}
-              <div className="w-4/10 bg-[#EFF0F7] rounded-xl shadow chat-container h-[600px] flex flex-col">
-                {selectedUser ? (
+              {/* Chat Window */}
+              <div className="w-full lg:w-1/3 bg-[#EFF0F7] rounded-2xl h-[calc(100vh-140px)] flex flex-col mt-6 lg:mt-0">
+                {selectedRoom ? (
                   <>
-                    <div className="flex items-center justify-between bg-[#3C91E6] text-white p-4 rounded-t-lg">
-                      <div className="flex items-center space-x-4">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-[#3C91E6] to-[#2B7CDC] text-white p-4 rounded-t-2xl">
+                      <div className="flex items-center space-x-3">
                         <img
-                          src={selectedUser.img}
-                          className="h-10 w-10 rounded-full"
-                          alt={selectedUser.name}
+                          src={
+                            selectedRoom.opponentUser?.img || "/icons/user.png"
+                          }
+                          onError={handleImageError}
+                          className="h-10 w-10 rounded-full object-cover"
+                          alt={selectedRoom.opponentUser?.name}
+                          loading="lazy"
                         />
-                        <span className="font-semibold">
-                          {selectedUser.name}
+                        <span className="font-semibold text-lg">
+                          {selectedRoom.opponentUser?.name}
                         </span>
                       </div>
-                      <img
-                        src="/icons/more.png"
-                        className="h-5 w-5"
-                        alt="More"
-                      />
+                      <button
+                        aria-label="Opsi lainnya"
+                        className="hover:bg-white/20 p-2 rounded-full transition-colors"
+                      >
+                        <img src="/icons/more.png" className="h-5 w-5" alt="" />
+                      </button>
                     </div>
-                    <div className="px-4 py-2 space-y-4 overflow-y-auto flex-1">
-                      {selectedUser.messages.map((msg, index) => {
-                        const prevMsg = selectedUser.messages[index - 1];
-                        const showDateLabel =
-                          !prevMsg || prevMsg.date !== msg.date;
 
-                        const dateObj = new Date(msg.date);
-                        const today = new Date();
-                        const yesterday = new Date();
-                        yesterday.setDate(today.getDate() - 1);
-
-                        let label = dateObj.toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        });
-
-                        if (dateObj.toDateString() === today.toDateString()) {
-                          label = "Hari ini";
-                        } else if (
-                          dateObj.toDateString() === yesterday.toDateString()
-                        ) {
-                          label = "Kemarin";
-                        }
-
-                        return (
-                          <div key={index} className="space-y-2">
-                            {showDateLabel && (
-                              <div className="sticky top-0 z-10 flex justify-center">
-                                <span className="bg-gray-200 px-3 py-1 rounded-full text-xs text-gray-500 shadow-sm transition-all duration-200">
-                                  {label}
-                                </span>
-                              </div>
-                            )}
-                            <div
-                              className={`flex ${
-                                msg.isMe ? "justify-end" : "justify-start"
-                              }`}
-                            >
-                              <div className={"max-w-[75%]"}>
-                                <p
-                                  className={`p-3 rounded-lg shadow text-sm ${
-                                    msg.isMe
-                                      ? "bg-[#3C91E6] text-white rounded-tr-none"
-                                      : "bg-white text-gray-800 rounded-tl-none"
-                                  }`}
+                    <div
+                      ref={chatBodyRef}
+                      className="px-4 py-4 space-y-4 overflow-y-auto flex-1"
+                    >
+                      {messagesLoading ? (
+                        <div className="text-center text-gray-600">
+                          Memuat pesan...
+                        </div>
+                      ) : messagesError ? (
+                        <div className="text-center text-red-500">
+                          {messagesError}
+                        </div>
+                      ) : !messages ||
+                        typeof messages !== "object" ||
+                        Object.keys(messages).length === 0 ? (
+                        <div className="text-center text-gray-500">
+                          Belum ada pesan
+                        </div>
+                      ) : (
+                        <div>
+                          {Object.entries(messages)
+                            .sort((a, b) => {
+                              const dateA = a[1][0]?.created_at
+                                ? new Date(a[1][0].created_at)
+                                : new Date(0);
+                              const dateB = b[1][0]?.created_at
+                                ? new Date(b[1][0].created_at)
+                                : new Date(0);
+                              return dateA - dateB;
+                            })
+                            .map(([date, messagesForDate], dateIndex) => {
+                              if (
+                                !Array.isArray(messagesForDate) ||
+                                messagesForDate.length === 0
+                              )
+                                return null;
+                              return (
+                                <div
+                                  key={`date-${date}-${dateIndex}`}
+                                  className="space-y-3"
                                 >
-                                  {msg.text}
-                                </p>
-                                <p
-                                  className={`text-xs mt-1 ${
-                                    msg.isMe
-                                      ? "text-gray-300 text-right"
-                                      : "text-gray-400 text-left"
-                                  }`}
-                                >
-                                  {msg.time}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <div ref={messagesEndRef} />{" "}
-                      {/* Anchor untuk scroll ke bawah */}
+                                  <div className="flex justify-center">
+                                    <span className="bg-gray-200/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-gray-600">
+                                      {formatDateLabel(date, messagesForDate)}
+                                    </span>
+                                  </div>
+                                  {messagesForDate
+                                    .filter(
+                                      (msg, index, self) =>
+                                        msg.id &&
+                                        index ===
+                                          self.findIndex((m) => m.id === msg.id)
+                                    )
+                                    .map((msg) => {
+                                      console.log(
+                                        "Rendering message:",
+                                        JSON.stringify(msg, null, 2)
+                                      );
+                                      const senderId = Number(msg.sender_id);
+                                      const isActiveUser =
+                                        senderId === user?.userId;
+                                      return (
+                                        <div
+                                          key={msg.id}
+                                          className="message-bubble space-y-1"
+                                          role="region"
+                                          aria-label={`Pesan dari ${
+                                            isActiveUser ? "Anda" : selectedRoom.opponentUser?.name
+                                          }`}
+                                        >
+                                          <div
+                                            className={`flex ${
+                                              isActiveUser
+                                                ? "justify-end"
+                                                : "justify-start"
+                                            }`}
+                                          >
+                                            <div className="max-w-[80%] group">
+                                              <p
+                                                className={`p-3 rounded-2xl text-sm transition-all ${
+                                                  isActiveUser
+                                                    ? "bg-[#3C91E6] text-white rounded-tr-none"
+                                                    : "bg-gray-100 text-gray-800 rounded-tl-none"
+                                                }`}
+                                              >
+                                                {msg.message}
+                                              </p>
+                                              {msg.time && (
+                                                <p
+                                                  className={`text-xs text-gray-500 mt-1 transition-opacity opacity-0 group-hover:opacity-100 ${
+                                                    isActiveUser
+                                                      ? "text-right"
+                                                      : "text-left"
+                                                  }`}
+                                                >
+                                                  {msg.time}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              );
+                            })}
+                        </div>
+                      )}
+                      <div ref={messagesEndRef} />
                     </div>
-                    {/* Input Pesan Baru */}
-                    <div className="p-2 bg-[#EFF0F7]">
-                      <div className="flex items-center space-x-2">
+
+                    <div className="p-4 bg-gray-50 border-t border-gray-200">
+                      <div className="flex items-center space-x-3">
                         <input
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Ketik pesan..."
-                          className="flex-1 p-3 border bg-white border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                          maxLength="1000"
+                          className="flex-1 p-3 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
                           onKeyPress={(e) => {
-                            if (e.key === "Enter") {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
                               handleSendMessage();
                             }
                           }}
+                          disabled={sendLoading}
+                          aria-label="Ketik pesan"
                         />
                         <button
                           onClick={handleSendMessage}
-                          className="bg-[#3C91E6] text-white p-3 rounded-full hover:bg-[#2B7DCC] transition-colors"
+                          className="bg-[#3C91E6] text-white p-3 rounded-full hover:bg-[#2B7CDC] transition-colors disabled:opacity-50"
+                          disabled={sendLoading}
+                          aria-label="Kirim pesan"
                         >
-                          <img
-                            src="/icons/send.png"
-                            alt="Send"
-                            className="h-5 w-5"
-                          />
+                          {sendLoading ? (
+                            <svg
+                              className="animate-spin h-5 w-5 text-white"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="none"
+                              />
+                            </svg>
+                          ) : (
+                            <img
+                              src="/icons/send.png"
+                              alt="Send"
+                              className="h-5 w-5"
+                            />
+                          )}
                         </button>
                       </div>
+                      {sendError && (
+                        <p className="text-red-500 text-xs mt-2">{sendError}</p>
+                      )}
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center justify-center flex-1 text-center text-gray-400">
-                    Pilih pengguna untuk mulai chatting
+                  <div className="flex items-center justify-center flex-1 text-center text-gray-500">
+                    Pilih obrolan untuk mulai chatting
                   </div>
                 )}
               </div>

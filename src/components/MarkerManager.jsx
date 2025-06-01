@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { useMap, useMapEvents } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
 import L from "leaflet";
-import "../MarkerStyles.css";
 import Popup from "./Popup";
 import PreviewMarker from "./PreviewMarker";
 import PlaceMarkers from "./PlaceMarker";

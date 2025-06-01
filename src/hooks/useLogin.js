@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { login, adminLogin } from '../services/authService';
+import { login, adminLogin } from '../services/authService'; // No need to import setAuth
 
 export const useLogin = (isAdminLogin = false) => {
     const navigate = useNavigate();
@@ -20,14 +20,15 @@ export const useLogin = (isAdminLogin = false) => {
                 localStorage.setItem('user_role', data.user.role);
                 const from = location.state?.from || (data.user.role === 'admin' ? '/admin-panel' : '/dashboard');
                 navigate(from, { replace: true });
+                console.log('Login successful, token stored:', localStorage.getItem('auth_header')); // Debug
                 return true;
             } else {
                 setError('Login gagal: token tidak ditemukan');
                 return false;
             }
         } catch (err) {
-            console.error('Login error:', err.response || err); // Log error for debugging
-            const errorMessage = err.response?.data?.message || err.message || 'Terjadi kesalahan saat login';
+            console.error('Login error:', err.response || err);
+            const errorMessage = err.message || 'Terjadi kesalahan saat login';
             setError(errorMessage);
             return false;
         } finally {

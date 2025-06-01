@@ -1,4 +1,3 @@
-// src/services/authService.js
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { setAuth, isAuthenticated, checkTokenValidity, logout, initAuth } from '../utils/authUtils';
@@ -12,6 +11,36 @@ const api = axios.create({
         'Accept': 'application/json'
     }
 });
+
+// Request interceptor to attach token
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('auth_header');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        console.log('Request headers:', config.headers); // Debug
+        return config;
+    },
+    (error) => {
+        console.error('Request interceptor error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor for 401 handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.error('Unauthorized request:', error.response.data);
+            // Optionally clear token and redirect
+            // logout();
+            // window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 // Login function
 export const login = async (email, password) => {
@@ -82,7 +111,30 @@ export const resetPassword = async (email, otp, password, password_confirmation)
     }
 };
 
+// Get current logged-in user
+export const getCurrentUser = async () => {
+    try {
+        const token = localStorage.getItem("auth_header");
+        if (!token || typeof token !== "string" || token.length < 10) {
+            throw new Error("Invalid or missing auth token");
+        }
+        const response = await api.get('/auth/user', {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+        return {
+            userId: Number(response.data.user_id),
+            data: response.data,
+        };
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
+};
+
 // Export utility functions from authUtils
 export { isAuthenticated, checkTokenValidity, logout, initAuth };
 
+// Export axios instance
 export default api;
