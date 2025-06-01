@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://easygo-api-production.up.railway.app/api";
 
 const getAuthHeaders = () => {
   const auth_header = localStorage.getItem("auth_header");
