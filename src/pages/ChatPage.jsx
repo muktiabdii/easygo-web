@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import NavbarBack from "../components/NavbarBack";
 import { useChatRooms } from "../hooks/useChatRooms";
 import { useMessages } from "../hooks/useMessages";
@@ -6,8 +6,10 @@ import { useSendMessages } from "../hooks/useSendMessages";
 import { useCreateRoom } from "../hooks/useCreateRoom";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSearchMessages } from "../hooks/useSearchMessages";
+import { useSearchUsers } from "../hooks/useSearchUsers";
 import { isToday, isYesterday, format, parse, isValid } from "date-fns";
 import id from "date-fns/locale/id";
+import "../styles/ChatPage.css";
 
 const ChatPage = () => {
   const [activeTab, setActiveTab] = useState("cari");
@@ -34,40 +36,56 @@ const ChatPage = () => {
   const lastScrollTop = useRef(0);
 
   const { user, loading: authLoading, error: authError } = useCurrentUser();
-  const { chatRooms, loading: roomsLoading, updateChatRoom } = useChatRooms();
+  const { chatRooms, loading: roomsLoading, addChatRoom } = useChatRooms();
   const {
     messages,
     loading: messagesLoading,
     refetch,
-    updateMessages,
+    error: messagesError,
   } = useMessages(selectedRoom?.id);
-  const { searchedMessages, search, clearSearch, loading: searchLoading, error: searchError } = useSearchMessages();
-  const { handleSend, loading: sendLoading } = useSendMessages(
-    selectedRoom?.id,
-    (newMsg) => {
-      console.log("New message sent:", newMsg);
-      const formattedMsg = {
-        id: newMsg.id,
-        sender_id: newMsg.sender_id,
-        message: newMsg.message,
-        created_at: newMsg.created_at,
-        time: new Date(newMsg.created_at).toLocaleTimeString("id-ID", {
-          timeZone: "Asia/Jakarta",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      updateMessages(formattedMsg);
-      updateChatRoom({
-        chat_room_id: selectedRoom.id,
-        message: newMsg.message,
-        created_at: newMsg.created_at,
-        sender_id: newMsg.sender_id,
+  const {
+    handleSend,
+    loading: sendLoading,
+    error: sendError,
+  } = useSendMessages();
+  const {
+    searchedMessages,
+    search,
+    clearSearch,
+    loading: searchLoading,
+    error: searchError,
+  } = useSearchMessages();
+  const {
+    createRoom,
+    loading: createLoading,
+    error: createError,
+  } = useCreateRoom();
+  const {
+    users,
+    searchUsers,
+    loading: usersLoading,
+    error: usersError,
+  } = useSearchUsers();
+
+  // Handle profile image errors
+  const handleImageError = (e) => {
+    console.log("Profile image failed to load, using placeholder:", e.target.src);
+    e.target.src = "/icons/user.png";
+  };
+
+  // Fetch users when "Cari Orang" tab is active or filters change
+  useEffect(() => {
+    if (activeTab === "cari") {
+      searchUsers({
+        query: searchKeyword,
+        city: selectedFilters.kota !== "Semua Kota" ? selectedFilters.kota : "",
+        review_count:
+          selectedFilters.review !== "Semua" ? selectedFilters.review : "",
+        last_active:
+          selectedFilters.aktif !== "Semua" ? selectedFilters.aktif : "",
       });
-      setShouldScrollToBottom(true);
     }
-  );
-  const { createRoom, loading: createLoading } = useCreateRoom();
+  }, [activeTab, searchKeyword, selectedFilters, searchUsers]);
 
   useEffect(() => {
     const chatBody = chatBodyRef.current;
@@ -89,17 +107,16 @@ const ChatPage = () => {
       chatBodyRef.current?.scrollTo(0, lastScrollTop.current);
       return;
     }
-    if (shouldScrollToBottom && messagesEndRef.current) {
-      console.log(
-        "Scrolling to bottom for new message, messages count:",
-        Object.keys(messages).length
-      );
+    if (
+      shouldScrollToBottom &&
+      messagesEndRef.current &&
+      Object.keys(messages).length > 0
+    ) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, messagesLoading, shouldScrollToBottom]);
 
   useEffect(() => {
-    console.log("Selected room changed:", selectedRoom?.id);
     setShouldScrollToBottom(true);
     setSearchKeyword("");
     clearSearch();
@@ -125,12 +142,16 @@ const ChatPage = () => {
   const getOpponentUser = useCallback(
     (room) => {
       if (!room || !user?.userId) {
-        return { name: "Unknown", img: "/icons/default-user.png" };
+        return { name: "Unknown", img: "/icons/user.png" };
       }
       const isUser1 = room.user1?.id === user.userId;
-      return isUser1
-        ? room.user2 || { name: "Unknown", img: "/icons/default-user.png" }
-        : room.user1 || { name: "Unknown", img: "/icons/default-user.png" };
+      const opponent = isUser1
+        ? room.user2 || { name: "Unknown", img: "/icons/user.png" }
+        : room.user1 || { name: "Unknown", img: "/icons/user.png" };
+      return {
+        ...opponent,
+        img: opponent.img || "/icons/user.png",
+      };
     },
     [user]
   );
@@ -146,7 +167,6 @@ const ChatPage = () => {
         id: room.chat_room_id,
         opponentUser,
       };
-      console.log("Room selected:", normalizedRoom);
       setSelectedRoom(normalizedRoom);
     },
     [getOpponentUser]
@@ -154,51 +174,62 @@ const ChatPage = () => {
 
   const handleSendMessage = useCallback(async () => {
     if (newMessage.trim() === "" || !selectedRoom?.id) {
-      console.log("Cannot send message: empty or no room selected");
+      console.log("Cannot send message: empty or no room selected", {
+        newMessage,
+        selectedRoomId: selectedRoom?.id,
+      });
       return;
     }
     try {
-      console.log("Sending message:", newMessage);
-      await handleSend(newMessage);
+      console.log("Attempting to send message:", {
+        message: newMessage,
+        chatRoomId: selectedRoom.id,
+      });
+      await handleSend(selectedRoom.id, newMessage);
+      console.log("Message sent successfully");
       setNewMessage("");
       setShouldScrollToBottom(true);
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error("Failed to send message:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
     }
   }, [newMessage, selectedRoom, handleSend]);
 
   const handleCreateRoom = useCallback(
     async (userId) => {
-      if (!createRoom) {
-        console.error("createRoom function is not defined");
-        return;
-      }
       try {
         console.log("Creating room for user:", userId);
         await createRoom(userId, (newRoom) => {
-          if (!newRoom.chat_room_id) {
-            console.error("New room missing chat_room_id:", newRoom);
+          if (!newRoom.id) {
+            console.error("New room missing id:", newRoom);
             return;
           }
-          const opponentUser = getOpponentUser(newRoom);
+          const opponentUser = users.find((u) => u.id === userId) || {
+            id: userId,
+            name: "Unknown",
+            img: "/icons/user.png",
+          };
           const newRoomData = {
-            chat_room_id: newRoom.chat_room_id,
-            user1: newRoom.user1,
-            user2: newRoom.user2,
+            chat_room_id: newRoom.id,
+            user1: newRoom.user1 || { id: user.userId, name: user.name, img: user.img || "/icons/user.png" },
+            user2: newRoom.user2 || { id: userId, name: opponentUser.name, img: opponentUser.img || "/icons/user.png" },
             last_message: null,
           };
-          console.log("New room created:", newRoomData);
-          setChatRooms((prev) => [newRoomData, ...prev]);
+          addChatRoom(newRoomData);
           setSelectedRoom({
-            id: newRoom.chat_room_id,
+            id: newRoom.id,
             opponentUser,
           });
+          setActiveTab("obrolan");
         });
       } catch (error) {
         console.error("Failed to create room:", error);
       }
     },
-    [createRoom, getOpponentUser]
+    [createRoom, user, users, addChatRoom]
   );
 
   const handleSearchMessages = useCallback(
@@ -213,43 +244,50 @@ const ChatPage = () => {
     [search, clearSearch]
   );
 
-  const formatDateLabel = (dateStr, messagesForDate) => {
+  const handleSearchUsers = useCallback(
+    (keyword) => {
+      setSearchKeyword(keyword);
+      searchUsers({
+        query: keyword,
+        city: selectedFilters.kota !== "Semua Kota" ? selectedFilters.kota : "",
+        review_count:
+          selectedFilters.review !== "Semua" ? selectedFilters.review : "",
+        last_active:
+          selectedFilters.aktif !== "Semua" ? selectedFilters.aktif : "",
+      });
+    },
+    [searchUsers, selectedFilters]
+  );
+
+  const formatDateLabel = useCallback((dateStr, messagesForDate) => {
     if (dateStr === "Hari Ini" || dateStr === "Kemarin") {
       return dateStr;
     }
-
     const firstMessage = messagesForDate && messagesForDate[0];
     if (firstMessage && firstMessage.created_at) {
       const date = new Date(firstMessage.created_at);
       if (isValid(date)) {
-        if (isToday(date)) {
-          return "Hari Ini";
-        } else if (isYesterday(date)) {
-          return "Kemarin";
-        }
+        if (isToday(date)) return "Hari Ini";
+        if (isYesterday(date)) return "Kemarin";
         return format(date, "iiii, d MMMM yyyy", { locale: id });
       }
     }
-
     try {
-      const date = parse(dateStr, "iiii, d MMMM yyyy", new Date(), { locale: id });
+      const date = parse(dateStr, "iiii, d MMMM yyyy", new Date(), {
+        locale: id,
+      });
       if (isValid(date)) {
-        if (isToday(date)) {
-          return "Hari Ini";
-        } else if (isYesterday(date)) {
-          return "Kemarin";
-        }
+        if (isToday(date)) return "Hari Ini";
+        if (isYesterday(date)) return "Kemarin";
         return dateStr;
       }
     } catch (error) {
       console.warn("Error parsing date:", dateStr, error);
     }
-
-    console.warn("Invalid date:", dateStr);
     return "Tanggal Tidak Valid";
-  };
+  }, []);
 
-  const formatLastMessageTime = (createdAt) => {
+  const formatLastMessageTime = useCallback((createdAt) => {
     if (!createdAt) {
       return new Date().toLocaleTimeString("id-ID", {
         timeZone: "Asia/Jakarta",
@@ -259,7 +297,6 @@ const ChatPage = () => {
     }
     const date = new Date(createdAt);
     if (isNaN(date)) {
-      console.warn("Invalid last message date:", createdAt);
       return "Waktu Tidak Valid";
     }
     return date.toLocaleTimeString("id-ID", {
@@ -267,392 +304,303 @@ const ChatPage = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+  }, []);
 
-  // Filter chat rooms based on search results
-  const filteredChatRooms = searchKeyword
-    ? chatRooms.filter((room) =>
-        Object.values(searchedMessages).some((messagesForDate) =>
-          messagesForDate.some(
-            (msg) =>
-              msg.chat_room_id === room.chat_room_id &&
-              msg.message.toLowerCase().includes(searchKeyword.toLowerCase())
+  const filteredChatRooms = useMemo(
+    () =>
+      searchKeyword
+        ? chatRooms.filter((room) =>
+            Object.values(searchedMessages).some((messagesForDate) =>
+              messagesForDate.some(
+                (msg) =>
+                  msg.chat_room_id === room.chat_room_id &&
+                  msg.message.toLowerCase().includes(searchKeyword.toLowerCase())
+              )
+            )
           )
-        )
-      )
-    : chatRooms;
+        : chatRooms,
+    [chatRooms, searchKeyword, searchedMessages]
+  );
 
   if (authLoading) {
-    return <div className="text-center">Memuat data pengguna...</div>;
+    return <div className="text-center p-6">Memuat data pengguna...</div>;
   }
 
   if (authError) {
-    return <div className="text-center text-red-500">{authError}</div>;
+    return <div className="text-center text-red-500 p-6">{authError}</div>;
   }
 
   return (
     <>
       <NavbarBack title="Chat" />
-      <div className="min-h-screen bg-white px-4 pt-16">
-        <div className="flex flex-col md:flex-row md:space-x-6">
-          <div className="w-full md:w-2/12 space-y-4">
-            <button
-              onClick={() => setActiveTab("cari")}
-              className={`flex items-center space-x-2 px-6 py-4 transition-all duration-300 overflow-hidden ${
-                activeTab === "cari"
-                  ? "bg-[#EFF0F7] text-[#3C91E6] rounded-l-lg rounded-r-none w-[265px]"
-                  : "bg-[#EFF0F7] text-black shadow rounded-lg w-[230px]"
-              }`}
-              aria-label="Cari Orang"
-            >
-              <img
-                src={`/icons/${
-                  activeTab === "cari" ? "cariorang-blue" : "cariorang-black"
-                }.png`}
-                alt=""
-                className="h-5 w-5"
-              />
-              <span className="font-medium">Cari Orang</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("obrolan")}
-              className={`flex items-center space-x-2 px-6 py-4 transition-all duration-300 overflow-hidden ${
-                activeTab === "obrolan"
-                  ? "bg-[#EFF0F7] text-[#3C91E6] rounded-l-lg rounded-r-none w-[265px]"
-                  : "bg-[#EFF0F7] text-black shadow rounded-lg w-[230px]"
-              }`}
-              aria-label="Semua Obrolan"
-            >
-              <img
-                src={`/icons/${
-                  activeTab === "obrolan"
-                    ? "semuaobrolan-blue"
-                    : "semuaobrolan-black"
-                }.png`}
-                alt=""
-                className="h-5 w-5"
-              />
-              <span className="font-medium">Semua Obrolan</span>
-            </button>
+      <div className="min-h-screen bg-white px-4 pt-25 pb-4 chat-container">
+        <div className="flex flex-col lg:flex-row lg:space-x-6 max-w-7xl mx-auto">
+          {/* Tabs */}
+          <div className="w-full lg:w-64 space-y-4 mb-6 lg:mb-0">
+            {["cari", "obrolan"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`tab-button rounded-lg ${
+                  activeTab === tab ? "active" : "text-gray-700 hover:bg-[#E5E7EB]"
+                }`}
+                aria-label={tab === "cari" ? "Cari Orang" : "Semua Obrolan"}
+              >
+                <div className="tab-content">
+                  <img
+                    src={`/icons/${
+                      tab === "cari"
+                        ? activeTab === "cari"
+                          ? "cariorang-blue"
+                          : "cariorang-black"
+                        : activeTab === "obrolan"
+                        ? "semuaobrolan-blue"
+                        : "semuaobrolan-black"
+                    }.png`}
+                    alt=""
+                    className="h-6 w-6"
+                  />
+                  <span className="font-semibold text-base">
+                    {tab === "cari" ? "Cari Orang" : "Semua Obrolan"}
+                  </span>
+                </div>
+              </button>
+            ))}
           </div>
 
           {activeTab === "cari" ? (
-            <div className="w-full md:w-10/12 flex flex-col md:flex-row md:space-x-6">
-              <div className="w-full md:w-7/12 bg-[#EFF0F7] rounded-xl p-6 h-[calc(100vh-120px)] flex flex-col">
-                <h2 className="text-center text-lg font-semibold mb-4">
-                  Cari Orang
+            <div className="w-full flex flex-col lg:flex-row lg:space-x-6">
+              {/* Search Users Panel */}
+              <div className="w-full lg:w-2/3 bg-[#EFF0F7] rounded-2xl p-6 h-[calc(100vh-140px)] flex flex-col">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+                  Cari Pengguna
                 </h2>
                 <div className="relative mb-6">
                   <input
                     type="text"
-                    placeholder="Cari Orang..."
-                    className="w-full pl-10 pr-4 py-2 bg-white rounded-full border border-[#3C91E6] focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                    placeholder="Cari nama pengguna..."
+                    value={searchKeyword}
+                    onChange={(e) => handleSearchUsers(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
                     aria-label="Cari pengguna"
                   />
                   <img
                     src="/icons/search.png"
-                    alt=""
-                    className="absolute left-3 top-2.5 h-5 w-5"
+                    alt="Search"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
                   />
                 </div>
-                <div className="space-y-5 overflow-y-auto flex-1">
-                  {roomsLoading ? (
-                    <div className="text-center">Memuat...</div>
+                <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                  {usersLoading ? (
+                    <div className="text-center text-gray-600">Memuat...</div>
+                  ) : usersError ? (
+                    <div className="text-center text-red-500">{usersError}</div>
+                  ) : users.length === 0 ? (
+                    <div className="text-center text-gray-500">
+                      Tidak ada pengguna ditemukan
+                    </div>
                   ) : (
-                    chatRooms.map((room) => {
-                      const opponentUser = getOpponentUser(room);
-                      return (
-                        <div
-                          key={room.chat_room_id}
-                          className="flex items-center space-x-4 p-2 hover:bg-white rounded-lg cursor-pointer"
-                          onClick={() => handleRoomSelect(room)}
-                        >
-                          <img
-                            src={opponentUser.img || "/icons/default-user.png"}
-                            alt={opponentUser.name}
-                            className="h-10 w-10 rounded-full"
-                          />
-                          <div className="flex-1">
-                            <p className="font-semibold">{opponentUser.name}</p>
-                            <p className="text-sm text-gray-600 truncate">
-                              Telah mereview {opponentUser.reviewCount || 0}+
-                              fasilitas aksesibilitas
-                            </p>
-                          </div>
-                          <div className="text-right space-y-0">
-                            <p className="text-xs text-gray-500">
-                              {opponentUser.city || "Unknown"} | Aktif{" "}
-                              {opponentUser.lastActive || "Unknown"}
-                            </p>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCreateRoom(opponentUser.id);
-                              }}
-                              className="bg-[#3C91E6] text-white text-xs px-4 py-0.5 rounded"
-                              disabled={createLoading}
-                              aria-label={`Mulai obrolan baru dengan ${opponentUser.name}`}
-                            >
-                              {createLoading ? "Membuat..." : "Obrolan Baru"}
-                            </button>
-                          </div>
+                    users.map((u) => (
+                      <div
+                        key={u.id}
+                        className="chat-room-item flex items-center space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-white cursor-pointer transition-colors"
+                        onClick={() => handleCreateRoom(u.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === "Enter" && handleCreateRoom(u.id)}
+                      >
+                        <img
+                          src={u.profile_image || "/icons/user.png"}
+                          onError={handleImageError}
+                          alt={u.name}
+                          className="h-12 w-12 rounded-full object-cover"
+                          loading="lazy"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800">{u.name}</p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {u.reviews_count || 0}+ ulasan aksesibilitas
+                          </p>
                         </div>
-                      );
-                    })
+                        <div className="text-right space-y-1">
+                          <p className="text-xs text-gray-500">
+                            {u.city || "Tidak Diketahui"} | Aktif{" "}
+                            {u.last_active
+                              ? new Date(u.last_active).toLocaleDateString(
+                                  "id-ID",
+                                  { day: "numeric", month: "short" }
+                                )
+                              : "Tidak Diketahui"}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateRoom(u.id);
+                            }}
+                            className="bg-[#3C91E6] text-white text-xs px-4 py-1 rounded-full hover:bg-[#2B7CDC] transition-colors"
+                            disabled={createLoading}
+                            aria-label={`Mulai obrolan baru dengan ${u.name}`}
+                          >
+                            {createLoading ? "Membuat..." : "Obrolan Baru"}
+                          </button>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
 
-              <div className="w-full md:w-5/12 bg-[#EFF0F7] p-6 rounded-xl shadow h-[calc(100vh-120px)] flex flex-col">
-                <h3 className="text-center text-lg font-semibold">
+              {/* Filter Panel */}
+              <div className="w-full lg:w-1/3 bg-[#EFF0F7] p-6 rounded-2xl h-[calc(100vh-140px)] flex flex-col mt-6 lg:mt-0">
+                <h3 className="text-xl font-bold text-gray-800 text-center mb-6">
                   Filter Pencarian
                 </h3>
-                <div className="space-y-10 flex-1">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="w-full flex flex-col space-y-2"
-                      ref={kotaRef}
-                    >
+                <div className="flex-1 space-y-6">
+                  {[
+                    {
+                      id: "kota",
+                      label: "Asal Kota",
+                      options: [
+                        "Semua Kota",
+                        "Jakarta",
+                        "Bandung",
+                        "Surabaya",
+                        "Yogyakarta",
+                      ],
+                      ref: kotaRef,
+                    },
+                    {
+                      id: "review",
+                      label: "Jumlah Ulasan",
+                      options: ["Semua", "0", "10+", "50+", "100+", "1000+"],
+                      ref: reviewRef,
+                    },
+                    {
+                      id: "aktif",
+                      label: "Aktif Terakhir",
+                      options: [
+                        "Semua",
+                        "Hari ini",
+                        "Kemarin",
+                        "Minggu ini",
+                        "Bulan lalu",
+                        "Tahun lalu",
+                      ],
+                      ref: aktifRef,
+                    },
+                  ].map(({ id, label, options, ref }) => (
+                    <div key={id} className="flex flex-col space-y-2" ref={ref}>
                       <label
-                        htmlFor="kota-filter"
+                        htmlFor={`${id}-filter`}
                         className="text-sm font-medium text-gray-700"
                       >
-                        Asal Kota
+                        {label}
                       </label>
                       <div className="relative">
                         <button
-                          id="kota-filter"
+                          id={`${id}-filter`}
                           onClick={() =>
-                            setDropdownOpen({
-                              kota: !dropdownOpen.kota,
+                            setDropdownOpen((prev) => ({
+                              kota: false,
                               review: false,
                               aktif: false,
-                            })
+                              [id]: !prev[id],
+                            }))
                           }
-                          className="p-3 bg-white rounded-md w-full text-left border border-gray-300"
-                          aria-label="Pilih kota"
-                          aria-expanded={dropdownOpen.kota}
+                          className="p-3 bg-gray-50 rounded-lg w-full text-left border border-gray-300 hover:bg-gray-100 transition-colors"
+                          aria-label={`Pilih ${label.toLowerCase()}`}
+                          aria-expanded={dropdownOpen[id]}
                         >
-                          {selectedFilters.kota || "Pilih Kota"}
+                          {selectedFilters[id] || `Pilih ${label}`}
                           <img
                             src="/icons/dropdown.png"
                             alt=""
                             className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
-                              dropdownOpen.kota ? "rotate-180" : ""
+                              dropdownOpen[id] ? "rotate-180" : ""
                             }`}
                           />
                         </button>
-                        {dropdownOpen.kota && (
-                          <div
-                            className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-md"
-                            role="listbox"
-                          >
-                            {[
-                              "Semua Kota",
-                              "Jakarta",
-                              "Bandung",
-                              "Surabaya",
-                              "Yogyakarta",
-                            ].map((kota) => (
+                        {dropdownOpen[id] && (
+                          <div className="dropdown-menu absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1">
+                            {options.map((option) => (
                               <div
-                                key={kota}
+                                key={option}
                                 onClick={() => {
                                   setSelectedFilters((prev) => ({
                                     ...prev,
-                                    kota,
+                                    [id]: option,
                                   }));
                                   setDropdownOpen((prev) => ({
                                     ...prev,
-                                    kota: false,
+                                    [id]: false,
                                   }));
                                 }}
-                                className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer"
+                                className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer text-sm"
                                 role="option"
-                                aria-selected={selectedFilters.kota === kota}
+                                aria-selected={selectedFilters[id] === option}
                               >
-                                {kota}
+                                {option}
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="w-full flex flex-col space-y-2"
-                      ref={reviewRef}
-                    >
-                      <label
-                        htmlFor="review-filter"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Jumlah Review
-                      </label>
-                      <div className="relative">
-                        <button
-                          id="review-filter"
-                          onClick={() =>
-                            setDropdownOpen({
-                              kota: false,
-                              review: !dropdownOpen.review,
-                              aktif: false,
-                            })
-                          }
-                          className="p-3 bg-white rounded-md w-full text-left border border-gray-300"
-                          aria-label="Pilih jumlah review"
-                          aria-expanded={dropdownOpen.review}
-                        >
-                          {selectedFilters.review || "Pilih Jumlah Review"}
-                          <img
-                            src="/icons/dropdown.png"
-                            alt=""
-                            className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
-                              dropdownOpen.review ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {dropdownOpen.review && (
-                          <div
-                            className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-md"
-                            role="listbox"
-                          >
-                            {["Semua", "0", "10+", "50+", "100+", "1000+"].map(
-                              (review) => (
-                                <div
-                                  key={review}
-                                  onClick={() => {
-                                    setSelectedFilters((prev) => ({
-                                      ...prev,
-                                      review,
-                                    }));
-                                    setDropdownOpen((prev) => ({
-                                      ...prev,
-                                      review: false,
-                                    }));
-                                  }}
-                                  className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer"
-                                  role="option"
-                                  aria-selected={
-                                    selectedFilters.review === review
-                                  }
-                                >
-                                  {review}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="w-full flex flex-col space-y-2"
-                      ref={aktifRef}
-                    >
-                      <label
-                        htmlFor="aktif-filter"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Aktif Terakhir
-                      </label>
-                      <div className="relative">
-                        <button
-                          id="aktif-filter"
-                          onClick={() =>
-                            setDropdownOpen({
-                              kota: false,
-                              review: false,
-                              aktif: !dropdownOpen.aktif,
-                            })
-                          }
-                          className="p-3 bg-white rounded-md w-full text-left border border-gray-300"
-                          aria-label="Pilih waktu aktif"
-                          aria-expanded={dropdownOpen.aktif}
-                        >
-                          {selectedFilters.aktif || "Pilih Waktu"}
-                          <img
-                            src="/icons/dropdown.png"
-                            alt=""
-                            className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${
-                              dropdownOpen.aktif ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {dropdownOpen.aktif && (
-                          <div
-                            className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-md"
-                            role="listbox"
-                          >
-                            {[
-                              "Semua",
-                              "Hari ini",
-                              "Kemarin",
-                              "Minggu ini",
-                              "Bulan lalu",
-                              "Tahun lalu",
-                            ].map((aktif) => (
-                              <div
-                                key={aktif}
-                                onClick={() => {
-                                  setSelectedFilters((prev) => ({
-                                    ...prev,
-                                    aktif,
-                                  }));
-                                  setDropdownOpen((prev) => ({
-                                    ...prev,
-                                    aktif: false,
-                                  }));
-                                }}
-                                className="px-4 py-2 hover:bg-[#EFF0F7] cursor-pointer"
-                                role="option"
-                                aria-selected={selectedFilters.aktif === aktif}
-                              >
-                                {aktif}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
                 <button
-                  className="bg-[#3C91E6] text-white w-full py-3 rounded-md mt-4"
-                  aria-label="Terapkan filter"
+                  className="bg-[#3C91E6] text-white w-full py-3 rounded-lg mt-6 hover:bg-[#2B7CDC] transition-colors"
+                  onClick={() =>
+                    searchUsers({
+                      query: searchKeyword,
+                      city:
+                        selectedFilters.kota !== "Semua Kota"
+                          ? selectedFilters.kota
+                          : "",
+                      review_count:
+                        selectedFilters.review !== "Semua"
+                          ? selectedFilters.review
+                          : "",
+                      last_active:
+                        selectedFilters.aktif !== "Semua"
+                          ? selectedFilters.aktif
+                          : "",
+                    })
+                  }
+                  aria-label="Terapkan filter pencarian"
                 >
-                  Terapkan
+                  Terapkan Filter
                 </button>
               </div>
             </div>
           ) : (
-            <div className="w-full md:w-10/12 flex flex-col md:flex-row md:space-x-6">
-              <div className="w-full md:w-7/12 bg-[#EFF0F7] rounded-xl p-6 h-[calc(100vh-120px)] flex flex-col">
-                <h2 className="text-center text-lg font-semibold mb-4">
-                  Cari Obrolan
+            <div className="w-full flex flex-col lg:flex-row lg:space-x-6">
+              {/* Chat Rooms Panel */}
+              <div className="w-full lg:w-2/3 bg-[#EFF0F7] rounded-2xl p-6 h-[calc(100vh-140px)] flex flex-col">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+                  Obrolan
                 </h2>
                 <div className="relative mb-6">
                   <input
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => handleSearchMessages(e.target.value)}
-                    placeholder="Cari Obrolan..."
-                    className="w-full pl-10 pr-4 py-2 bg-white rounded-full border border-[#3C91E6] focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                    placeholder="Cari pesan dalam obrolan..."
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
                     aria-label="Cari obrolan"
                   />
                   <img
                     src="/icons/search.png"
-                    alt=""
-                    className="absolute left-3 top-2.5 h-5 w-5"
+                    alt="Search"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
                   />
                 </div>
-                <div className="space-y-5 overflow-y-auto flex-1">
+                <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                   {roomsLoading || searchLoading ? (
-                    <div className="text-center">Memuat...</div>
-                  ) : searchKeyword && filteredChatRooms.length === 0 && !searchLoading ? (
+                    <div className="text-center text-gray-600">Memuat...</div>
+                  ) : searchKeyword &&
+                    filteredChatRooms.length === 0 &&
+                    !searchLoading ? (
                     <div className="text-center text-gray-500">
                       Tidak ada obrolan ditemukan
                     </div>
@@ -662,23 +610,28 @@ const ChatPage = () => {
                       return (
                         <div
                           key={room.chat_room_id}
-                          className="flex items-center space-x-4 p-2 hover:bg-white rounded-lg cursor-pointer"
+                          className="chat-room-item flex items-center space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-white cursor-pointer transition-colors"
                           onClick={() => handleRoomSelect(room)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === "Enter" && handleRoomSelect(room)}
                         >
                           <img
-                            src={opponentUser?.img || "/icons/default-user.png"}
+                            src={opponentUser?.img || "/icons/user.png"}
+                            onError={handleImageError}
                             alt={opponentUser?.name}
-                            className="h-10 w-10 rounded-full"
+                            className="h-12 w-12 rounded-full object-cover"
+                            loading="lazy"
                           />
                           <div className="flex-1">
-                            <p className="font-semibold">
+                            <p className="font-semibold text-gray-800">
                               {opponentUser?.name}
                             </p>
                             <p className="text-sm text-gray-600 truncate">
                               {room.last_message?.message || "Belum ada pesan"}
                             </p>
                           </div>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-500">
                             {formatLastMessageTime(
                               room.last_message?.created_at
                             )}
@@ -690,34 +643,45 @@ const ChatPage = () => {
                 </div>
               </div>
 
-              <div className="w-full md:w-5/12 bg-[#EFF0F7] rounded-xl shadow h-[calc(100vh-120px)] flex flex-col">
+              {/* Chat Window */}
+              <div className="w-full lg:w-1/3 bg-[#EFF0F7] rounded-2xl h-[calc(100vh-140px)] flex flex-col mt-6 lg:mt-0">
                 {selectedRoom ? (
                   <>
-                    <div className="flex items-center justify-between bg-[#3C91E6] text-white p-4 rounded-t-lg">
-                      <div className="flex items-center space-x-4">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-[#3C91E6] to-[#2B7CDC] text-white p-4 rounded-t-2xl">
+                      <div className="flex items-center space-x-3">
                         <img
                           src={
-                            selectedRoom.opponentUser?.img ||
-                            "/icons/default-user.png"
+                            selectedRoom.opponentUser?.img || "/icons/user.png"
                           }
-                          className="h-10 w-10 rounded-full"
+                          onError={handleImageError}
+                          className="h-10 w-10 rounded-full object-cover"
                           alt={selectedRoom.opponentUser?.name}
+                          loading="lazy"
                         />
-                        <span className="font-semibold">
+                        <span className="font-semibold text-lg">
                           {selectedRoom.opponentUser?.name}
                         </span>
                       </div>
-                      <button aria-label="Opsi lainnya">
+                      <button
+                        aria-label="Opsi lainnya"
+                        className="hover:bg-white/20 p-2 rounded-full transition-colors"
+                      >
                         <img src="/icons/more.png" className="h-5 w-5" alt="" />
                       </button>
                     </div>
 
                     <div
                       ref={chatBodyRef}
-                      className="px-4 py-2 space-y-4 overflow-y-auto flex-1"
+                      className="px-4 py-4 space-y-4 overflow-y-auto flex-1"
                     >
                       {messagesLoading ? (
-                        <div className="text-center">Memuat pesan...</div>
+                        <div className="text-center text-gray-600">
+                          Memuat pesan...
+                        </div>
+                      ) : messagesError ? (
+                        <div className="text-center text-red-500">
+                          {messagesError}
+                        </div>
                       ) : !messages ||
                         typeof messages !== "object" ||
                         Object.keys(messages).length === 0 ? (
@@ -737,16 +701,18 @@ const ChatPage = () => {
                               return dateA - dateB;
                             })
                             .map(([date, messagesForDate], dateIndex) => {
-                              if (!Array.isArray(messagesForDate) || messagesForDate.length === 0)
+                              if (
+                                !Array.isArray(messagesForDate) ||
+                                messagesForDate.length === 0
+                              )
                                 return null;
-
                               return (
                                 <div
                                   key={`date-${date}-${dateIndex}`}
-                                  className="space-y-2"
+                                  className="space-y-3"
                                 >
                                   <div className="flex justify-center">
-                                    <span className="bg-gray-200 px-3 py-1 rounded-full text-xs text-gray-500 shadow-sm">
+                                    <span className="bg-gray-200/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-gray-600">
                                       {formatDateLabel(date, messagesForDate)}
                                     </span>
                                   </div>
@@ -758,12 +724,22 @@ const ChatPage = () => {
                                           self.findIndex((m) => m.id === msg.id)
                                     )
                                     .map((msg) => {
+                                      console.log(
+                                        "Rendering message:",
+                                        JSON.stringify(msg, null, 2)
+                                      );
                                       const senderId = Number(msg.sender_id);
                                       const isActiveUser =
                                         senderId === user?.userId;
-
                                       return (
-                                        <div key={msg.id} className="space-y-1">
+                                        <div
+                                          key={msg.id}
+                                          className="message-bubble space-y-1"
+                                          role="region"
+                                          aria-label={`Pesan dari ${
+                                            isActiveUser ? "Anda" : selectedRoom.opponentUser?.name
+                                          }`}
+                                        >
                                           <div
                                             className={`flex ${
                                               isActiveUser
@@ -771,19 +747,19 @@ const ChatPage = () => {
                                                 : "justify-start"
                                             }`}
                                           >
-                                            <div className="max-w-[75%]">
+                                            <div className="max-w-[80%] group">
                                               <p
-                                                className={`p-3 rounded-lg shadow text-sm ${
+                                                className={`p-3 rounded-2xl text-sm transition-all ${
                                                   isActiveUser
                                                     ? "bg-[#3C91E6] text-white rounded-tr-none"
-                                                    : "bg-white text-gray-800 rounded-tl-none"
+                                                    : "bg-gray-100 text-gray-800 rounded-tl-none"
                                                 }`}
                                               >
                                                 {msg.message}
                                               </p>
                                               {msg.time && (
                                                 <p
-                                                  className={`text-xs text-gray-500 ${
+                                                  className={`text-xs text-gray-500 mt-1 transition-opacity opacity-0 group-hover:opacity-100 ${
                                                     isActiveUser
                                                       ? "text-right"
                                                       : "text-left"
@@ -805,15 +781,15 @@ const ChatPage = () => {
                       <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="p-2 bg-[#EFF0F7]">
-                      <div className="flex items-center space-x-2">
+                    <div className="p-4 bg-gray-50 border-t border-gray-200">
+                      <div className="flex items-center space-x-3">
                         <input
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type a message..."
+                          placeholder="Ketik pesan..."
                           maxLength="1000"
-                          className="flex-1 p-3 border bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-[#3C91E6]"
+                          className="flex-1 p-3 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
                           onKeyPress={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
@@ -821,13 +797,13 @@ const ChatPage = () => {
                             }
                           }}
                           disabled={sendLoading}
-                          aria-label="Type a message"
+                          aria-label="Ketik pesan"
                         />
                         <button
                           onClick={handleSendMessage}
-                          className="bg-[#3C91E6] text-white p-3 rounded-full hover:bg-[#2B7CDC] transition-colors relative"
+                          className="bg-[#3C91E6] text-white p-3 rounded-full hover:bg-[#2B7CDC] transition-colors disabled:opacity-50"
                           disabled={sendLoading}
-                          aria-label="Send message"
+                          aria-label="Kirim pesan"
                         >
                           {sendLoading ? (
                             <svg
@@ -846,16 +822,19 @@ const ChatPage = () => {
                           ) : (
                             <img
                               src="/icons/send.png"
-                              alt=""
+                              alt="Send"
                               className="h-5 w-5"
                             />
                           )}
                         </button>
                       </div>
+                      {sendError && (
+                        <p className="text-red-500 text-xs mt-2">{sendError}</p>
+                      )}
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center justify-center flex-1 text-center">
+                  <div className="flex items-center justify-center flex-1 text-center text-gray-500">
                     Pilih obrolan untuk mulai chatting
                   </div>
                 )}

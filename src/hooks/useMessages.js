@@ -2,20 +2,23 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { getMessages } from "../services/chatService";
 import { usePusher } from "./usePusher";
 import { useCurrentUser } from "./useCurrentUser";
-import { format, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
 import id from "date-fns/locale/id";
 
 export const useMessages = (chatRoomId) => {
   const [messages, setMessages] = useState({});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const cache = useMemo(() => new Map(), []);
   const { user } = useCurrentUser();
 
   const fetchMessages = useCallback(
     async (forceRefresh = false) => {
       if (!chatRoomId) {
+        console.log("No chatRoomId, clearing messages");
         setMessages({});
         setLoading(false);
+        setError(null);
         return;
       }
 
@@ -23,6 +26,7 @@ export const useMessages = (chatRoomId) => {
         console.log("Using cached messages for room:", chatRoomId);
         setMessages(cache.get(chatRoomId));
         setLoading(false);
+        setError(null);
         return;
       }
 
@@ -33,13 +37,16 @@ export const useMessages = (chatRoomId) => {
         if (!res.data || typeof res.data !== "object") {
           console.error("Invalid messages format:", res.data);
           setMessages({});
+          setError("Invalid messages format");
           return;
         }
-        console.log("Messages fetched:", res.data);
+        console.log("Messages fetched:", JSON.stringify(res.data, null, 2));
         cache.set(chatRoomId, res.data);
         setMessages(res.data);
+        setError(null);
       } catch (err) {
         console.error("Error fetching messages:", err);
+        setError(err.response?.data?.error || "Failed to load messages");
         setMessages({});
       } finally {
         setLoading(false);
@@ -48,34 +55,42 @@ export const useMessages = (chatRoomId) => {
     [chatRoomId, cache]
   );
 
-  useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
-
   const updateMessages = useCallback(
     (newMsg) => {
+      console.log(
+        "Attempting to update messages with:",
+        JSON.stringify(newMsg, null, 2)
+      );
+      if (!newMsg?.id || !newMsg?.created_at || !newMsg?.chat_room_id) {
+        console.warn("Invalid message data:", newMsg);
+        return;
+      }
+      if (newMsg.chat_room_id != chatRoomId) {
+        console.log("Message for different chat room:", {
+          received: newMsg.chat_room_id,
+          expected: chatRoomId,
+        });
+        return;
+      }
       setMessages((prev) => {
-        if (!newMsg.created_at) {
-          console.warn("Missing created_at in new message:", newMsg);
-          return prev;
-        }
-        const date = new Date(newMsg.created_at);
+        const date = parseISO(newMsg.created_at);
         if (isNaN(date)) {
-          console.warn("Invalid created_at in new message:", newMsg.created_at);
+          console.warn("Invalid created_at:", newMsg.created_at);
           return prev;
         }
 
-        // Tentukan kunci grup berdasarkan created_at
         let dateKey;
         if (isToday(date)) {
           dateKey = "Hari Ini";
         } else if (isYesterday(date)) {
           dateKey = "Kemarin";
         } else {
-          dateKey = format(date, "iiii, d MMMM yyyy", { locale: id }); // Misal: Jumat, 16 Mei 2025
+          dateKey = format(date, "iiii, d MMMM yyyy", { locale: id });
         }
 
-        const dateMessages = prev[dateKey] || [];
+        const dateMessages = Array.isArray(prev[dateKey])
+          ? [...prev[dateKey]]
+          : [];
         if (dateMessages.some((msg) => msg.id === newMsg.id)) {
           console.log("Duplicate message detected:", newMsg.id);
           return prev;
@@ -85,8 +100,17 @@ export const useMessages = (chatRoomId) => {
           ...prev,
           [dateKey]: [...dateMessages, newMsg],
         };
-        console.log("Updating cache with new message:", newMsg);
+        console.log(
+          "Updated messages state:",
+          JSON.stringify(updatedMessages, null, 2)
+        );
         cache.set(chatRoomId, updatedMessages);
+
+        // Optimize: Return prev if no changes to prevent re-renders
+        if (JSON.stringify(prev) === JSON.stringify(updatedMessages)) {
+          console.log("No changes in messages state, skipping update");
+          return prev;
+        }
         return updatedMessages;
       });
     },
@@ -97,28 +121,47 @@ export const useMessages = (chatRoomId) => {
     chatRoomId ? `chat-room-message.${chatRoomId}` : null,
     "new-message",
     (data) => {
+      console.log("Pusher data received:", JSON.stringify(data, null, 2));
       if (!chatRoomId) {
         console.log("No chat room selected, ignoring Pusher event");
         return;
       }
-      console.log("Received Pusher event data:", data);
-      if (data?.message && data.message.sender_id !== user?.userId) {
-        console.log("Processing new message from Pusher:", data.message);
-        const { id, sender_id, message, created_at } = data.message;
+      if (data?.message) {
+        console.log(
+          "Processing new message from Pusher:",
+          JSON.stringify(data.message, null, 2)
+        );
+        const { id, sender_id, message, created_at, time, chat_room_id } =
+          data.message;
         const date = new Date(created_at);
         if (isNaN(date)) {
-          console.warn("Invalid created_at in Pusher message:", created_at);
+          console.warn("Invalid created_at:", created_at);
           return;
         }
-        const time = format(date, "HH:mm", { locale: id });
-        const newMsg = { id, sender_id, message, created_at, time };
+        const formattedTime = time || format(date, "HH:mm", { locale: id });
+        const newMsg = {
+          id,
+          sender_id,
+          message,
+          created_at,
+          time: formattedTime,
+          chat_room_id,
+        };
         updateMessages(newMsg);
       } else {
-        console.log("Ignoring Pusher event: Invalid data or own message", data);
+        console.warn("Invalid Pusher data:", data);
       }
     },
-    [chatRoomId, user?.userId, updateMessages]
+    [chatRoomId, updateMessages]
   );
 
-  return { messages, loading, refetch: fetchMessages, updateMessages };
+  useEffect(() => {
+    console.log("useMessages setup:", {
+      chatRoomId,
+      channel: chatRoomId ? `chat-room-message.${chatRoomId}` : null,
+    });
+    fetchMessages();
+  }, [fetchMessages]);
+
+  return { messages, loading, error, refetch: fetchMessages, updateMessages };
 };

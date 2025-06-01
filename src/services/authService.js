@@ -12,6 +12,36 @@ const api = axios.create({
     }
 });
 
+// Request interceptor to attach token
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('auth_header');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        console.log('Request headers:', config.headers); // Debug
+        return config;
+    },
+    (error) => {
+        console.error('Request interceptor error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor for 401 handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.error('Unauthorized request:', error.response.data);
+            // Optionally clear token and redirect
+            // logout();
+            // window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 // Login function
 export const login = async (email, password) => {
     try {

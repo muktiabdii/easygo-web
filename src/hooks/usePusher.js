@@ -1,16 +1,27 @@
 import { useEffect, useRef } from "react";
 import { getPusherInstance } from "../utils/pusher";
 
-export const usePusher = (channelName, eventName, callback, dependencies = []) => {
+export const usePusher = (
+  channelName,
+  eventName,
+  callback,
+  dependencies = []
+) => {
   const channelRef = useRef(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
     isMounted.current = true;
 
-    // Check if channelName is a valid string
-    if (typeof channelName !== "string" || !channelName || channelName.includes("undefined")) {
-      console.log("Invalid or no channel name, skipping subscription:", channelName);
+    if (
+      typeof channelName !== "string" ||
+      !channelName ||
+      channelName.includes("undefined")
+    ) {
+      console.log(
+        "Invalid or no channel name, skipping subscription:",
+        channelName
+      );
       return;
     }
 
@@ -26,14 +37,32 @@ export const usePusher = (channelName, eventName, callback, dependencies = []) =
 
     channelRef.current.bind("pusher:subscription_error", (error) => {
       if (isMounted.current) {
-        console.error("Subscription error:", error, "Channel:", channelName);
+        console.error("Subscription error:", { channel: channelName, error });
       }
     });
 
     channelRef.current.bind(eventName, (data) => {
       if (isMounted.current) {
-        console.log("Event received:", eventName, data);
+        console.log(
+          "Event received:",
+          eventName,
+          JSON.stringify(data, null, 2)
+        );
         callback(data);
+      }
+    });
+
+    // Monitor connection state
+    pusher.connection.bind("disconnected", () => {
+      if (isMounted.current) {
+        console.warn("Pusher disconnected, attempting to reconnect...");
+        pusher.connect();
+      }
+    });
+
+    pusher.connection.bind("connected", () => {
+      if (isMounted.current) {
+        console.log("Pusher reconnected");
       }
     });
 

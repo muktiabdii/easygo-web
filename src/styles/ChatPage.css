@@ -1,0 +1,70 @@
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes extendTab {
+  from { width: 256px; } /* Matches lg:w-64 */
+  to { width: 304px; } /* Extends ~48px to bridge gap */
+}
+
+.message-bubble {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.chat-room-item {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.chat-room-item:hover {
+  transform: translateX(5px);
+}
+
+.tab-button {
+  transition: color 0.3s ease;
+  background-color: #EFF0F7;
+  width: 256px; /* Matches lg:w-64 */
+  position: relative;
+}
+
+.tab-button.active {
+  color: #3C91E6;
+  animation: extendTab 0.3s ease-out forwards;
+}
+
+.tab-button:not(.active) {
+  color: #374151; /* gray-700 */
+}
+
+.tab-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* 12px, matches space-x-3 */
+  padding: 1.25rem 1.5rem;
+  width: 256px;
+  position: relative;
+  z-index: 1;
+}
+
+.dropdown-menu {
+  animation: slideIn 0.2s ease-out;
+}
+
+.chat-container {
+  background: #FFFFFF; /* Pure white */
+}
+
+@media (max-width: 1024px) {
+  .tab-button {
+    width: 100%; /* Full width on mobile */
+    animation: none !important; /* Disable extension */
+  }
+  .tab-content {
+    width: 100%; /* Full width on mobile */
+  }
+}
