@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import NavbarBack from "../components/NavbarBack";
 import { useChatRooms } from "../hooks/useChatRooms";
 import { useMessages } from "../hooks/useMessages";
@@ -69,7 +75,10 @@ const ChatPage = () => {
 
   // Handle profile image errors
   const handleImageError = (e) => {
-    console.log("Profile image failed to load, using placeholder:", e.target.src);
+    console.log(
+      "Profile image failed to load, using placeholder:",
+      e.target.src
+    );
     e.target.src = "/icons/user.png";
   };
 
@@ -214,8 +223,16 @@ const ChatPage = () => {
           };
           const newRoomData = {
             chat_room_id: newRoom.id,
-            user1: newRoom.user1 || { id: user.userId, name: user.name, img: user.img || "/icons/user.png" },
-            user2: newRoom.user2 || { id: userId, name: opponentUser.name, img: opponentUser.img || "/icons/user.png" },
+            user1: newRoom.user1 || {
+              id: user.userId,
+              name: user.name,
+              img: user.img || "/icons/user.png",
+            },
+            user2: newRoom.user2 || {
+              id: userId,
+              name: opponentUser.name,
+              img: opponentUser.img || "/icons/user.png",
+            },
             last_message: null,
           };
           addChatRoom(newRoomData);
@@ -314,7 +331,9 @@ const ChatPage = () => {
               messagesForDate.some(
                 (msg) =>
                   msg.chat_room_id === room.chat_room_id &&
-                  msg.message.toLowerCase().includes(searchKeyword.toLowerCase())
+                  msg.message
+                    .toLowerCase()
+                    .includes(searchKeyword.toLowerCase())
               )
             )
           )
@@ -342,7 +361,9 @@ const ChatPage = () => {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`tab-button rounded-lg ${
-                  activeTab === tab ? "active" : "text-gray-700 hover:bg-[#E5E7EB]"
+                  activeTab === tab
+                    ? "active"
+                    : "text-gray-700 hover:bg-[#E5E7EB]"
                 }`}
                 aria-label={tab === "cari" ? "Cari Orang" : "Semua Obrolan"}
               >
@@ -407,7 +428,9 @@ const ChatPage = () => {
                         onClick={() => handleCreateRoom(u.id)}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => e.key === "Enter" && handleCreateRoom(u.id)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleCreateRoom(u.id)
+                        }
                       >
                         <img
                           src={u.profile_image || "/icons/user.png"}
@@ -417,7 +440,9 @@ const ChatPage = () => {
                           loading="lazy"
                         />
                         <div className="flex-1">
-                          <p className="font-semibold text-gray-800">{u.name}</p>
+                          <p className="font-semibold text-gray-800">
+                            {u.name}
+                          </p>
                           <p className="text-sm text-gray-600 truncate">
                             {u.reviews_count || 0}+ ulasan aksesibilitas
                           </p>
@@ -466,6 +491,7 @@ const ChatPage = () => {
                         "Bandung",
                         "Surabaya",
                         "Yogyakarta",
+                        "Malang"
                       ],
                       ref: kotaRef,
                     },
@@ -614,7 +640,9 @@ const ChatPage = () => {
                           onClick={() => handleRoomSelect(room)}
                           role="button"
                           tabIndex={0}
-                          onKeyDown={(e) => e.key === "Enter" && handleRoomSelect(room)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleRoomSelect(room)
+                          }
                         >
                           <img
                             src={opponentUser?.img || "/icons/user.png"}
@@ -672,7 +700,7 @@ const ChatPage = () => {
 
                     <div
                       ref={chatBodyRef}
-                      className="px-4 py-4 space-y-4 overflow-y-auto flex-1"
+                      className="px-4 py-4 space-y-4 overflow-y-auto flex-1 relative"
                     >
                       {messagesLoading ? (
                         <div className="text-center text-gray-600">
@@ -709,9 +737,9 @@ const ChatPage = () => {
                               return (
                                 <div
                                   key={`date-${date}-${dateIndex}`}
-                                  className="space-y-3"
+                                  className="space-y-1 relative"
                                 >
-                                  <div className="flex justify-center">
+                                  <div className="sticky top-0 z-10 flex justify-center py-2 bg-transparent">
                                     <span className="bg-gray-200/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-gray-600">
                                       {formatDateLabel(date, messagesForDate)}
                                     </span>
@@ -734,10 +762,12 @@ const ChatPage = () => {
                                       return (
                                         <div
                                           key={msg.id}
-                                          className="message-bubble space-y-1"
+                                          className="message-bubble"
                                           role="region"
                                           aria-label={`Pesan dari ${
-                                            isActiveUser ? "Anda" : selectedRoom.opponentUser?.name
+                                            isActiveUser
+                                              ? "Anda"
+                                              : selectedRoom.opponentUser?.name
                                           }`}
                                         >
                                           <div
@@ -751,15 +781,15 @@ const ChatPage = () => {
                                               <p
                                                 className={`p-3 rounded-2xl text-sm transition-all ${
                                                   isActiveUser
-                                                    ? "bg-[#3C91E6] text-white rounded-tr-none"
-                                                    : "bg-gray-100 text-gray-800 rounded-tl-none"
+                                                    ? "bg-[#3C91E6] text-white rounded-tr-none shadow-sm"
+                                                    : "bg-[#FFFFFF] border border-gray-300 text-gray-800 rounded-tl-none shadow-sm"
                                                 }`}
                                               >
                                                 {msg.message}
                                               </p>
                                               {msg.time && (
                                                 <p
-                                                  className={`text-xs text-gray-500 mt-1 transition-opacity opacity-0 group-hover:opacity-100 ${
+                                                  className={`text-xs text-gray-500 mt-0.5 transition-opacity opacity-0 group-hover:opacity-100 ${
                                                     isActiveUser
                                                       ? "text-right"
                                                       : "text-left"
@@ -789,7 +819,7 @@ const ChatPage = () => {
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Ketik pesan..."
                           maxLength="1000"
-                          className="flex-1 p-3 bg-white rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
+                          className="flex-1 p-3 bg-transparent rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3C91E6] transition-shadow"
                           onKeyPress={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
