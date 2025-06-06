@@ -7,6 +7,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,13 +19,21 @@ const LoginPage = () => {
     navigate('/login-admin');
   };
 
+  // Function to toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
         <Link to="/" aria-label="Go to home page">
-          <img src="/logo.png" alt="EasyGo Logo" className="w-60 mb-6" />
+          <img src="/logo.png" alt="EasyGo Logo" className="w-60" />
         </Link>
-        <div className="w-full max-w-md p-8 bg-[#EFF0F7] rounded-xl shadow-md text-center">
+      </div>
+
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div className="w-md max-w-md p-8 bg-[#EFF0F7] rounded-xl shadow-md text-center">
           <h1 className="text-2xl font-bold mb-6">Masuk</h1>
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <input
@@ -35,14 +44,28 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            <input
-              required
-              type="password"
-              placeholder="Kata Sandi"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            <div className="relative">
+              <input
+                required
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Kata Sandi"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <img
+                  src={showPassword ? '/icons/invisible.png' : '/icons/visible.png'}
+                  alt={showPassword ? 'Hide password' : 'Show password'}
+                  className="w-5 h-5"
+                />
+              </button>
+            </div>
             <div className="text-right text-sm">
               <a href="/forgot-password-step-one" className="hover:underline font-light">Lupa kata sandi?</a>
             </div>
