@@ -20,13 +20,10 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-[url('/login-bg.png')] bg-cover bg-no-repeat" style={{ backgroundPosition: '-30px 0px' }}>
-      <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
         <Link to="/" aria-label="Go to home page">
-          <img src="/logo.png" alt="EasyGo Logo" className="w-60" />
+          <img src="/logo.png" alt="EasyGo Logo" className="w-60 mb-6" />
         </Link>
-      </div>
-
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="w-full max-w-md p-8 bg-[#EFF0F7] rounded-xl shadow-md text-center">
           <h1 className="text-2xl font-bold mb-6">Masuk</h1>
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
@@ -70,7 +67,7 @@ const LoginPage = () => {
             </button>
           </form>
           <p className="text-sm mt-4">
-            Belum punya akun? <Link to="/register-step-one" className="font-semibold hover:underline">Daftar sekarang!</Link>
+            Belum punya akun? <Link to="/register-step-one" className="font-semibold hover:underline">Daftar sekarang Robin sekarang!</Link>
           </p>
           {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
         </div>
