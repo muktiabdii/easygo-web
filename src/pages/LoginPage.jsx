@@ -67,7 +67,7 @@ const LoginPage = () => {
             </button>
           </form>
           <p className="text-sm mt-4">
-            Belum punya akun? <Link to="/register-step-one" className="font-semibold hover:underline">Daftar sekarang Robin sekarang!</Link>
+            Belum punya akun? <Link to="/register-step-one" className="font-semibold hover:underline">Daftar sekarang!</Link>
           </p>
           {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
         </div>
