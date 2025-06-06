@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getChatRooms } from "../services/chatService";
+import { getChatRooms } from "../services/chatServices";
 import { getPusherInstance } from "../utils/pusher";
 
 export const useChatRooms = () => {
