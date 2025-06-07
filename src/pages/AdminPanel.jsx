@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import CustomDropdown from "../components/CustomDropdown";
 import DeleteDialog from "../components/DeleteDialog"; // Import the new component
 import { logout } from "../utils/authUtils";
-import Cookies from 'js-cookie';
 
 const AdminPanel = () => {
   const [pendingPlaces, setPendingPlaces] = useState([]);
@@ -31,36 +30,33 @@ const AdminPanel = () => {
   const placesPerPage = 20;
 
   // Fetch places
-useEffect(() => {
+  useEffect(() => {
     const fetchPendingPlaces = async () => {
-        setIsLoading(true);
-        try {
-            const token = Cookies.get('auth_token') || localStorage.getItem("auth_header");
-            console.log("Token for request:", token);
-            if (!token) {
-                throw new Error("Authentication token not found");
-            }
-            const response = await axios.get(
-                "https://easygo-api-production.up.railway.app/api/places/admin",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-            console.log("Places response:", response.data);
-            setPendingPlaces(response.data);
-            setFilteredPlaces(response.data);
-        } catch (err) {
-            console.error("Fetch error:", err.response?.data);
-            setError(err.response?.data?.error || "Failed to fetch places");
-        } finally {
-            setIsLoading(false);
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem("auth_header");
+        if (!token) {
+          throw new Error("Authentication token not found");
         }
+        const response = await axios.get(
+          "https://easygo-api-production.up.railway.app/api/places/admin",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setPendingPlaces(response.data);
+        setFilteredPlaces(response.data);
+      } catch (err) {
+        setError(err.response?.data?.error || "Failed to fetch places");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchPendingPlaces();
-}, []);
+  }, []);
 
   // Handle search input change
   const handleSearchChange = (e) => {
