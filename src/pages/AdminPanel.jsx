@@ -5,6 +5,13 @@ import CustomDropdown from "../components/CustomDropdown";
 import DeleteDialog from "../components/DeleteDialog"; // Import the new component
 import { logout } from "../utils/authUtils";
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
 const AdminPanel = () => {
   const [pendingPlaces, setPendingPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
