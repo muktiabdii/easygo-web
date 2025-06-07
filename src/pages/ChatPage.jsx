@@ -341,10 +341,6 @@ const ChatPage = () => {
     [chatRooms, searchKeyword, searchedMessages]
   );
 
-  if (authLoading) {
-    return <div className="text-center p-6">Memuat data pengguna...</div>;
-  }
-
   if (authError) {
     return <div className="text-center text-red-500 p-6">{authError}</div>;
   }
