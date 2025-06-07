@@ -4,7 +4,7 @@ import { setAuth, isAuthenticated, checkTokenValidity, logout, initAuth } from '
 
 // Initialize axios instance
 const api = axios.create({
-    baseURL: 'https://easygo-api-production.up.railway.app/api',
+    baseURL: 'http://easygo-api-production-d477.up.railway.app/api',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',

@@ -157,7 +157,7 @@ const Profile = () => {
         withCredentials: true,
       };
       const response = await axios.get(
-        "https://easygo-api-production.up.railway.app/api/auth/validate-token",
+        "http://easygo-api-production-d477.up.railway.app/api/auth/validate-token",
         config
       );
       if (response.data && response.data.user) {
@@ -192,7 +192,7 @@ const Profile = () => {
         withCredentials: true,
       };
       const response = await axios.get(
-        "https://easygo-api-production.up.railway.app/api/reviews/user",
+        "http://easygo-api-production-d477.up.railway.app/api/reviews/user",
         config
       );
       if (response.data) {
@@ -200,7 +200,7 @@ const Profile = () => {
           response.data.map(async (review) => {
             try {
               const placeResponse = await axios.get(
-                `https://easygo-api-production.up.railway.app/api/places/${review.place_id}`,
+                `http://easygo-api-production-d477.up.railway.app/api/places/${review.place_id}`,
                 config
               );
               return {
@@ -298,7 +298,7 @@ const Profile = () => {
 
       // Update profile data
       const profileResponse = await axios.put(
-        "https://easygo-api-production.up.railway.app/api/auth/update",
+        "http://easygo-api-production-d477.up.railway.app/api/auth/update",
         updateData,
         {
           ...config,
@@ -330,7 +330,7 @@ const Profile = () => {
         imageFormData.append("profile_image", selectedImage);
 
         const imageResponse = await axios.post(
-          "https://easygo-api-production.up.railway.app/api/auth/update-profile-image",
+          "http://easygo-api-production-d477.up.railway.app/api/auth/update-profile-image",
           imageFormData,
           {
             ...config,

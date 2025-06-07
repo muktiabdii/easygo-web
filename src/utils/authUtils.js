@@ -7,7 +7,7 @@ const TOKEN_EXPIRATION = 24 * 60 * 60 * 1000;
 
 // Initialize axios instance
 const api = axios.create({
-  baseURL: 'https://easygo-api-production.up.railway.app/api',
+  baseURL: 'http://easygo-api-production-d477.up.railway.app/api',
   withCredentials: true, // Always include credentials
   headers: {
     'Content-Type': 'application/json',
