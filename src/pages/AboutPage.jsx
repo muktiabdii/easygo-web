@@ -234,7 +234,7 @@ const AboutPage = () => {
         <div className="text-base relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-6">
           <div className="text-center md:text-left">
             <p className="mb-2">📍 JL Veteran No.10-11, Ketawanggede, Malang</p>
-            <p>📧 easygo@email.com | 📞 08 1234 5678 90</p>
+            <p>📧 easygowebid@gmail.com | 📞 08 1234 5678 90</p>
           </div>
           <div className="flex justify-center md:justify-end gap-4">
             {[
