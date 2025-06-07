@@ -104,7 +104,7 @@ const Profile = () => {
   const [updateError, setUpdateError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState(
-    "/users/profile-picture.png"
+    "/users/profile-picture.jpg"
   );
   const [formData, setFormData] = useState({
     username: "",
