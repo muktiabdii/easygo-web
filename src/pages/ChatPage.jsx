@@ -153,18 +153,39 @@ const ChatPage = () => {
       if (!room || !user?.userId) {
         return { name: "Unknown", img: "/icons/user.png" };
       }
+
       const isUser1 = room.user1?.id === user.userId;
-      const opponent = isUser1
-        ? room.user2 || { name: "Unknown", img: "/icons/user.png" }
-        : room.user1 || { name: "Unknown", img: "/icons/user.png" };
+      const opponent = isUser1 ? room.user2 : room.user1;
+
+      if (!opponent) {
+        return { name: "Unknown", img: "/icons/user.png" };
+      }
+
+      // Cari user dari data users yang fresh (jika ada)
+      const freshUserData = users.find((u) => u.id === opponent.id);
+
+      if (freshUserData) {
+        return {
+          ...opponent,
+          img:
+            freshUserData.profile_image ||
+            freshUserData.img ||
+            "/icons/user.png",
+          name: freshUserData.name || opponent.name,
+        };
+      }
+
+      // Fallback ke data dari room
+      const profileImage =
+        opponent.profile_image || opponent.img || "/icons/user.png";
+
       return {
         ...opponent,
-        img: opponent.img || "/icons/user.png",
+        img: profileImage,
       };
     },
-    [user]
+    [user, users]
   );
-
   const handleRoomSelect = useCallback(
     (room) => {
       if (!room?.chat_room_id) {
@@ -363,7 +384,7 @@ const ChatPage = () => {
                 }`}
                 aria-label={tab === "cari" ? "Cari Orang" : "Semua Obrolan"}
               >
-                <div className="tab-content">
+                <div className="tab-content cursor-pointer">
                   <img
                     src={`/icons/${
                       tab === "cari"
@@ -458,7 +479,7 @@ const ChatPage = () => {
                               e.stopPropagation();
                               handleCreateRoom(u.id);
                             }}
-                            className="bg-[#3C91E6] text-white text-xs px-4 py-1 rounded-full hover:bg-[#2B7CDC] transition-colors"
+                            className="bg-[#3C91E6] text-white text-xs px-4 py-1 rounded-full hover:bg-[#2B7CDC] transition-colors cursor-pointer"
                             disabled={createLoading}
                             aria-label={`Mulai obrolan baru dengan ${u.name}`}
                           >
@@ -487,7 +508,7 @@ const ChatPage = () => {
                         "Bandung",
                         "Surabaya",
                         "Yogyakarta",
-                        "Malang"
+                        "Malang",
                       ],
                       ref: kotaRef,
                     },
@@ -686,12 +707,6 @@ const ChatPage = () => {
                           {selectedRoom.opponentUser?.name}
                         </span>
                       </div>
-                      <button
-                        aria-label="Opsi lainnya"
-                        className="hover:bg-white/20 p-2 rounded-full transition-colors"
-                      >
-                        <img src="/icons/more.png" className="h-5 w-5" alt="" />
-                      </button>
                     </div>
 
                     <div
@@ -785,7 +800,7 @@ const ChatPage = () => {
                                               </p>
                                               {msg.time && (
                                                 <p
-                                                  className={`text-xs text-gray-500 mt-0.5 transition-opacity opacity-0 group-hover:opacity-100 ${
+                                                  className={`text-xs text-gray-500 mt-0.5 ${
                                                     isActiveUser
                                                       ? "text-right"
                                                       : "text-left"
