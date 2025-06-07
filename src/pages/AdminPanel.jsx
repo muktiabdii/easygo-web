@@ -5,13 +5,6 @@ import CustomDropdown from "../components/CustomDropdown";
 import DeleteDialog from "../components/DeleteDialog"; // Import the new component
 import { logout } from "../utils/authUtils";
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-}
-
 const AdminPanel = () => {
   const [pendingPlaces, setPendingPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
@@ -41,31 +34,21 @@ const AdminPanel = () => {
     const fetchPendingPlaces = async () => {
       setIsLoading(true);
       try {
-        // Try to get token from cookie first, then localStorage as fallback
-        let token = getCookie("auth_token");
-        if (!token) {
-          token = localStorage.getItem("auth_token");
-        }
-
+        const token = localStorage.getItem("auth_header");
         if (!token) {
           throw new Error("Authentication token not found");
         }
-
-        console.log("Token found:", token ? "Yes" : "No"); // Debug log
-
         const response = await axios.get(
           "https://easygo-api-production.up.railway.app/api/places/admin",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            withCredentials: true, // Important for cookies
           }
         );
         setPendingPlaces(response.data);
         setFilteredPlaces(response.data);
       } catch (err) {
-        console.error("Fetch error:", err); // Debug log
         setError(err.response?.data?.error || "Failed to fetch places");
       } finally {
         setIsLoading(false);
