@@ -34,6 +34,14 @@ const AdminPanel = () => {
     const fetchPendingPlaces = async () => {
       setIsLoading(true);
       try {
+        // Fetch CSRF token
+        await axios.get(
+          "https://easygo-api-production.up.railway.app/sanctum/csrf-cookie",
+          {
+            withCredentials: true,
+          }
+        );
+
         const token = localStorage.getItem("auth_header");
         if (!token) {
           throw new Error("Authentication token not found");
@@ -44,6 +52,7 @@ const AdminPanel = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            withCredentials: true, // Include cookies for Sanctum
           }
         );
         setPendingPlaces(response.data);
