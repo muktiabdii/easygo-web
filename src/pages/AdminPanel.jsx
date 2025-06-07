@@ -34,21 +34,31 @@ const AdminPanel = () => {
     const fetchPendingPlaces = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem("auth_header");
+        // Try to get token from cookie first, then localStorage as fallback
+        let token = getCookie("auth_token");
+        if (!token) {
+          token = localStorage.getItem("auth_token");
+        }
+
         if (!token) {
           throw new Error("Authentication token not found");
         }
+
+        console.log("Token found:", token ? "Yes" : "No"); // Debug log
+
         const response = await axios.get(
           "https://easygo-api-production.up.railway.app/api/places/admin",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            withCredentials: true, // Important for cookies
           }
         );
         setPendingPlaces(response.data);
         setFilteredPlaces(response.data);
       } catch (err) {
+        console.error("Fetch error:", err); // Debug log
         setError(err.response?.data?.error || "Failed to fetch places");
       } finally {
         setIsLoading(false);
