@@ -324,18 +324,25 @@ const PlaceDetail = () => {
   return (
     <div className="pt-20">
       <NavbarBack title={placeName} />
-      <div className="text-center mt-10">
-        <h2 className="text-3xl font-bold text-[#3C91E6]">{placeName}</h2>
-        <p className="text-xl text-black mt-2 mb-10">{placeAddress}</p>
+      
+      {/* Title Section - Responsive */}
+      <div className="text-center mt-6 sm:mt-10 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#3C91E6] break-words">
+          {placeName}
+        </h2>
+        <p className="text-lg sm:text-xl text-black mt-2 mb-6 sm:mb-10 break-words">
+          {placeAddress}
+        </p>
       </div>
-      {/* 📷 Carousel dengan Gambar dari selectedPlace */}
-      <div className="mt-4 mx-20 bg-gray-100 rounded-[20px] overflow-hidden">
+
+      {/* Carousel Section - Responsive */}
+      <div className="mt-4 mx-4 sm:mx-8 lg:mx-20 bg-gray-100 rounded-[20px] overflow-hidden">
         {images.length === 0 ? (
-          <div className="h-[250px] flex items-center justify-center">
+          <div className="h-[200px] sm:h-[250px] lg:h-[300px] flex items-center justify-center">
             <img
               src="/placeholder_img.png"
               alt="Tidak ada gambar tersedia"
-              className="object-cover h-[250px] w-full"
+              className="object-cover h-full w-full"
             />
           </div>
         ) : (
@@ -356,7 +363,7 @@ const PlaceDetail = () => {
                 <img
                   src={image.image}
                   alt={`Gambar tempat ${index + 1}`}
-                  className="object-cover h-[450px] w-full"
+                  className="object-cover h-[200px] sm:h-[300px] lg:h-[450px] w-full"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "/placeholder_img.png";
@@ -367,11 +374,12 @@ const PlaceDetail = () => {
           </Carousel>
         )}
       </div>
+
       {/* Modal Gambar Full-screen (Carousel) */}
       <AnimatePresence>
         {selectedImage && (
           <motion.div
-            className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50"
+            className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50 p-4"
             onClick={closeModal}
             variants={backgroundVariants}
             initial="hidden"
@@ -399,11 +407,12 @@ const PlaceDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Modal Gambar Ulasan */}
       <AnimatePresence>
         {selectedReviewImage && (
           <motion.div
-            className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50"
+            className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50 p-4"
             onClick={closeModal}
             variants={backgroundVariants}
             initial="hidden"
@@ -431,11 +440,12 @@ const PlaceDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Warning Dialog for Already Reviewed */}
       <AnimatePresence>
         {showWarningDialog && (
           <motion.div
-            className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50"
+            className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50 p-4"
             onClick={closeWarningDialog}
             variants={backgroundVariants}
             initial="hidden"
@@ -443,23 +453,23 @@ const PlaceDetail = () => {
             exit="exit"
           >
             <motion.div
-              className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+              className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4"
               variants={dialogVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
                 Peringatan
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-sm sm:text-base text-gray-600 mb-6">
                 Anda sudah memberikan ulasan untuk tempat ini. Setiap pengguna
                 hanya dapat memberikan satu ulasan per tempat.
               </p>
               <div className="flex justify-end gap-4">
                 <button
-                  className="bg-[#3C91E6] text-white font-semibold px-4 py-2 rounded hover:bg-[#337ac2] cursor-pointer"
+                  className="bg-[#3C91E6] text-white font-semibold px-4 py-2 rounded hover:bg-[#337ac2] cursor-pointer text-sm sm:text-base"
                   onClick={closeWarningDialog}
                 >
                   Tutup
@@ -469,6 +479,7 @@ const PlaceDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Login Dialog using ConfirmDialog */}
       {showLoginDialog && (
         <ConfirmDialog
@@ -482,34 +493,36 @@ const PlaceDetail = () => {
           cancelColor="text-red-500"
         />
       )}
+
+      {/* Accessibility Features Section - Responsive */}
       <div className="mt-6 px-4">
-        <h3 className="font-semibold text-2xl text-center mb-10 mt-15">
+        <h3 className="font-semibold text-xl sm:text-2xl text-center mb-6 sm:mb-10 mt-8 sm:mt-15">
           Fasilitas Aksesibilitas
         </h3>
         <div className="flex justify-center">
-          <div className="grid grid-cols-2 gap-y-5 gap-x-50 text-sm w-full max-w-2xl mb-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 sm:gap-y-5 gap-x-4 sm:gap-x-8 lg:gap-x-50 text-sm w-full max-w-4xl mb-12 sm:mb-20">
             {accessibilityFeaturesWithStatus.map((feature) => (
               <div
                 key={feature.id}
-                className="flex items-center whitespace-nowrap font-medium text-base"
+                className="flex items-center font-medium text-sm sm:text-base p-2 sm:p-0"
               >
                 <img
                   src={`/icons/${feature.icon}.png`}
                   alt={feature.name}
-                  className="w-7 h-7 mr-4"
+                  className="w-6 h-6 sm:w-7 sm:h-7 mr-3 sm:mr-4 flex-shrink-0"
                   onError={(e) => {
                     console.error(`Failed to load icon ${feature.icon}.png`);
                     e.target.src = "/icons/fallback_icon.png";
                   }}
                 />
-                <span className="mr-4">{feature.name}</span>
-                <div className="ml-auto flex-shrink-0">
+                <span className="mr-3 sm:mr-4 flex-1 min-w-0">{feature.name}</span>
+                <div className="flex-shrink-0">
                   <img
                     src={`/icons/${
                       feature.available ? "check_rounded" : "false_rounded"
                     }.png`}
                     alt={feature.available ? "Tersedia" : "Tidak Tersedia"}
-                    className="w-6 h-6"
+                    className="w-5 h-5 sm:w-6 sm:h-6"
                     onError={(e) => {
                       console.error(
                         `Failed to load status icon for ${feature.name}`
@@ -524,31 +537,31 @@ const PlaceDetail = () => {
         </div>
       </div>
 
-      {/* Ulasan */}
+      {/* Reviews Section - Responsive */}
       <div className="mt-6 px-4">
-        <h3 className="font-semibold text-2xl text-center mb-5">Ulasan</h3>
+        <h3 className="font-semibold text-xl sm:text-2xl text-center mb-5">Ulasan</h3>
 
         {loading ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3C91E6]"></div>
           </div>
         ) : error ? (
-          <div className="text-center text-red-500 py-4">{error}</div>
+          <div className="text-center text-red-500 py-4 text-sm sm:text-base">{error}</div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 text-sm sm:text-base px-4">
             Belum ada ulasan. Jadilah yang pertama memberikan ulasan!
           </div>
         ) : (
-          <div className="max-w-6xl mx-auto border-[#3C91E6] border-2 rounded-2xl p-4">
+          <div className="max-w-6xl mx-auto border-[#3C91E6] border-2 rounded-2xl p-2 sm:p-4">
             {displayedReviews.map((review, index) => (
               <React.Fragment key={review.id || index}>
-                <div className="flex gap-2 py-6">
+                <div className="flex gap-2 sm:gap-4 py-4 sm:py-6">
                   {/* Icon User */}
-                  <div className="w-16 flex-shrink-0 flex justify-center items-start pt-2 ml-4">
+                  <div className="w-12 sm:w-16 flex-shrink-0 flex justify-center items-start pt-2 ml-2 sm:ml-4">
                     <img
                       src={review.user?.profile_image || "/icons/user.png"}
                       alt={review.user?.name || "Pengguna"}
-                      className="w-[52px] h-[52px] rounded-full object-cover"
+                      className="w-10 h-10 sm:w-[52px] sm:h-[52px] rounded-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = "/icons/user.png";
@@ -557,17 +570,17 @@ const PlaceDetail = () => {
                   </div>
 
                   {/* Isi Review */}
-                  <div className="flex-1 pl-4 space-y-4">
+                  <div className="flex-1 pl-2 sm:pl-4 space-y-3 sm:space-y-4 pr-2 sm:pr-4">
                     {/* Nama & Rating */}
                     <div>
-                      <p className="font-semibold text-gray-800 text-xl">
+                      <p className="font-semibold text-gray-800 text-lg sm:text-xl break-words">
                         {review.user?.name || "Pengguna"}
                       </p>
-                      <div className="text-yellow-500 text-3xl">
+                      <div className="text-yellow-500 text-2xl sm:text-3xl">
                         {Array(Math.floor(review.rating))
                           .fill("★")
                           .map((star, i) => (
-                            <span key={i} className="mr-2">
+                            <span key={i} className="mr-1 sm:mr-2">
                               {star}
                             </span>
                           ))}
@@ -577,16 +590,16 @@ const PlaceDetail = () => {
                     {/* Fasilitas */}
                     {getReviewFacilities(review).length > 0 && (
                       <div>
-                        <ul className="text-base text-gray-700 space-y-2">
+                        <ul className="text-sm sm:text-base text-gray-700 space-y-2">
                           {getReviewFacilities(review).map((facility, i) => (
                             <li key={facility.id} className="flex items-center">
-                              <div style={{ width: "125px" }} className="mr-2">
-                                <span>{facility.name}</span>
+                              <div className="w-30 sm:w-32 mr-2 flex-shrink-0">
+                                <span className="text-xs sm:text-sm break-words">{facility.name}</span>
                               </div>
                               <img
                                 src="/icons/check_rounded_bk.png"
                                 alt="Tersedia"
-                                className="w-5 h-5"
+                                className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
                                 onError={(e) => {
                                   e.target.onerror = null;
                                   e.target.src = "/icons/fallback_icon.png";
@@ -600,10 +613,10 @@ const PlaceDetail = () => {
 
                     {/* Komentar */}
                     <div className="mt-3">
-                      <h4 className="text-sm font-medium text-gray-500 mb-2">
+                      <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
                         Ulasan:
                       </h4>
-                      <p className="text-xl text-black">
+                      <p className="text-base sm:text-xl text-black break-words">
                         {review.comment
                           ? `${review.comment}`
                           : "Tidak ada komentar"}
@@ -613,10 +626,10 @@ const PlaceDetail = () => {
                     {/* Foto-foto Ulasan */}
                     {getReviewImages(review).length > 0 && (
                       <div className="mt-4">
-                        <h4 className="text-sm font-medium text-gray-500 mb-2">
+                        <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
                           Foto:
                         </h4>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                           {getReviewImages(review).map((image, imgIndex) => (
                             <div
                               key={image.id || imgIndex}
@@ -626,7 +639,7 @@ const PlaceDetail = () => {
                               <img
                                 src={image.image_url}
                                 alt={`Foto ulasan ${imgIndex + 1}`}
-                                className="h-28 w-28 object-cover rounded-lg hover:opacity-90 transition-opacity"
+                                className="h-20 w-20 sm:h-28 sm:w-28 object-cover rounded-lg hover:opacity-90 transition-opacity"
                                 loading="lazy"
                                 onError={(e) => {
                                   e.target.onerror = null;
@@ -652,20 +665,22 @@ const PlaceDetail = () => {
           </div>
         )}
       </div>
-      <div className="mt-5 px-4 flex flex-col items-center gap-6 mb-6">
+
+      {/* Action Buttons - Responsive */}
+      <div className="mt-5 px-4 flex flex-col items-center gap-4 sm:gap-6 mb-6 pb-4">
         {reviews.length > 0 && (
           <button
-            className="border border-[#3C91E6] text-black font-semibold px-15 py-2 rounded cursor-pointer hover:bg-[#e0efff]"
+            className="border border-[#3C91E6] text-black font-semibold px-6 sm:px-15 py-2 rounded cursor-pointer hover:bg-[#e0efff] text-sm sm:text-base w-full max-w-xs sm:w-auto"
             onClick={navigateToAllReviews}
           >
             Lihat Semua Ulasan
           </button>
         )}
         <button
-          className="bg-[#3C91E6] text-white font-semibold px-12 py-2 rounded flex items-center gap-2 cursor-pointer hover:bg-[#337ac2]"
+          className="bg-[#3C91E6] text-white font-semibold px-6 sm:px-12 py-2 rounded flex items-center justify-center gap-2 cursor-pointer hover:bg-[#337ac2] text-sm sm:text-base w-full max-w-xs sm:w-auto"
           onClick={navigateToAddReview}
         >
-          <img src="/icons/add_review.png" alt="Tambah" className="w-6 h-6" />
+          <img src="/icons/add_review.png" alt="Tambah" className="w-5 h-5 sm:w-6 sm:h-6" />
           Tambahkan Ulasan
         </button>
       </div>

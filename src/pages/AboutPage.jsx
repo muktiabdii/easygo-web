@@ -212,12 +212,12 @@ const AboutPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="relative bg-gray-50 px-20 py-10 text-sm text-gray-600 mt-10 rounded-t-xl overflow-hidden animate-fadeInSlow">
-        {/* Icon */}
+      <footer className="relative bg-gray-50 px-4 sm:px-8 md:px-20 py-10 text-sm text-gray-600 mt-10 rounded-t-xl overflow-hidden animate-fadeInSlow">
+        {/* Logo - Desktop: background positioned, Mobile: bottom center */}
         <img
           src="/logo.png"
-          alt="Background Icon"
-          className="absolute w-40 bottom-40"
+          alt="EasyGo Logo"
+          className="hidden md:block absolute w-40 bottom-40 left-20"
         />
 
         {/* Info Section */}
@@ -231,9 +231,9 @@ const AboutPage = () => {
         </div>
 
         {/* Contact and Social */}
-        <div className="text-base relative z-10 grid md:grid-cols-2 gap-6 items-center mb-6">
-          <div>
-            <p>📍 JL Veteran No.10-11, Ketawanggede, Malang</p>
+        <div className="text-base relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-6">
+          <div className="text-center md:text-left">
+            <p className="mb-2">📍 JL Veteran No.10-11, Ketawanggede, Malang</p>
             <p>📧 easygo@email.com | 📞 08 1234 5678 90</p>
           </div>
           <div className="flex justify-center md:justify-end gap-4">
@@ -267,8 +267,17 @@ const AboutPage = () => {
         </div>
 
         {/* Copyright */}
-        <div className="relative z-10 text-center text-sm text-gray-500">
+        <div className="relative z-10 text-center text-sm text-gray-500 mb-6 md:mb-0">
           <p>© {new Date().getFullYear()} EasyGo. All rights reserved.</p>
+        </div>
+
+        {/* Logo - Mobile only: bottom center */}
+        <div className="md:hidden flex justify-center mt-6">
+          <img
+            src="/logo.png"
+            alt="EasyGo Logo"
+            className="w-34 sm:w-42"
+          />
         </div>
       </footer>
     </>
