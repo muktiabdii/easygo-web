@@ -45,7 +45,7 @@ const NavbarBack = ({ title = "Profile", showAvatar = true, avatarSrc }) => {
         };
 
         const response = await axios.get(
-          "http://easygo-api-production-d477.up.railway.app/api/auth/validate-token",
+          "https://easygo-api-production-d477.up.railway.app/api/auth/validate-token",
           config
         );
         if (

@@ -179,7 +179,7 @@ const AddPlace = () => {
       });
 
       const response = await axios.post(
-        "http://easygo-api-production-d477.up.railway.app/api/places",
+        "https://easygo-api-production-d477.up.railway.app/api/places",
         formDataObj,
         {
           headers: {

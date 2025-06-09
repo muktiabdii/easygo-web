@@ -30,7 +30,7 @@ const Dashboard = () => {
     const fetchPlaces = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://easygo-api-production-d477.up.railway.app/api/places');
+        const response = await fetch('https://easygo-api-production-d477.up.railway.app/api/places');
         if (response.ok) {
           const fetchedPlaces = await response.json();
           setPlaces(fetchedPlaces);
