@@ -38,7 +38,7 @@
 
 ## 🌐 Deployment
 
-The static site has been deployed to **Netlify**.  
+The site has been deployed to **Netlify**.  
 Access the website at:  
 🔗 [https://easygoid.netlify.app/](https://easygoid.netlify.app/)
 
